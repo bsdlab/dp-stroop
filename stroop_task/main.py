@@ -55,9 +55,6 @@ class Context:
     marker_writer: MarkerWriter = MarkerWriter("COM4")
 
 
-CTX = Context()
-
-
 class StroopTaskStateManager:
     """
     A state manager for the stroop task providing callbacks for state
@@ -67,7 +64,8 @@ class StroopTaskStateManager:
     Additionally there is an instructions and end state.
     """
 
-    def __init__(self):
+    def __init__(self, ctx: Context):
+        self.ctx = ctx  # the context under which to operate
         self.current_state: str = "fixation"  # starting with fixation
 
         # This list of states also orders how stimuli will appear
@@ -80,15 +78,16 @@ class StroopTaskStateManager:
 
     def start_block(self):
         """Start a block of trials"""
-        logger.debug("Showing intructions")
-        CTX.marker_writer.write(STARTBLOCK_MRK)
 
-        CTX.current_stimuli = [CTX.known_stimuli["instructions"]]
+        logger.debug("Showing intructions")
+        self.ctx.marker_writer.write(STARTBLOCK_MRK)
+
+        self.ctx.current_stimuli = [self.ctx.known_stimuli["instructions"]]
 
         # transition to show fixation, which will then start the state
         # transitions
         pyglet.clock.schedule_once(
-            lambda dt: self.show_fixation(), CTX.instruction_time_s
+            lambda dt: self.show_fixation(), self.ctx.instruction_time_s
         )
 
     def next_state(self, dt=0.0):
@@ -106,29 +105,38 @@ class StroopTaskStateManager:
         self.transition_map[next_state]()
 
         if next_state == "fixation":
-            CTX.marker_writer.write(ENDTRIAL_MRK)
+            self.ctx.marker_writer.write(ENDTRIAL_MRK)
 
     def show_fixation(self):
-        CTX.marker_writer.write(STARTTRIAL_MRK)
-        CTX.current_stimuli = [CTX.known_stimuli["fixation"]]
-        pyglet.clock.schedule_once(self.next_state, CTX.pre_stimulus_time_s)
+        self.ctx.marker_writer.write(STARTTRIAL_MRK)
+        self.ctx.current_stimuli = [self.ctx.known_stimuli["fixation"]]
+        pyglet.clock.schedule_once(
+            self.next_state, self.ctx.pre_stimulus_time_s
+        )
 
     def show_stimulus(self):
-        """Show the next stimulus in the CTX.block_stimuli list"""
-        CTX.current_stimulus_idx += 1
+        """Show the next stimulus in the self.ctx.block_stimuli list"""
+        self.ctx.current_stimulus_idx += 1
 
-        logger.debug(f"Showing stimulus {CTX.current_stimulus_idx}")
+        logger.debug(f"Showing stimulus {self.ctx.current_stimulus_idx}")
         # Go to end of block from here
-        if CTX.current_stimulus_idx + 1 > len(CTX.block_stimuli):
+        if self.ctx.current_stimulus_idx + 1 > len(self.ctx.block_stimuli):
             self.end_block()
         else:
-            stim_name, stim_label = CTX.block_stimuli[CTX.current_stimulus_idx]
+            stim_name, stim_label = self.ctx.block_stimuli[
+                self.ctx.current_stimulus_idx
+            ]
 
             logger.debug(f"Showing stimulus {stim_name=}")
 
             # Starting to listen to keyboard input
-            CTX.window.push_handlers(
-                on_key_press=on_key_press_stroop_reaction_handler
+
+            self.ctx.window.push_handlers(
+                on_key_press=partial(
+                    on_key_press_stroop_reaction_handler,
+                    ctx=self.ctx,
+                    smgr=self,
+                )
             )
 
             mrk = (
@@ -138,22 +146,24 @@ class StroopTaskStateManager:
             )
 
             # Start showing stimuli
-            CTX.current_stimuli = [stim_label]
-            CTX.marker_writer.write(mrk)
+            self.ctx.current_stimuli = [stim_label]
+            self.ctx.marker_writer.write(mrk)
 
             # start taking time
-            CTX.tic = time.perf_counter_ns()
+            self.ctx.tic = time.perf_counter_ns()
 
             # Set scheduled timeout
             pyglet.clock.schedule_once(
-                self.register_timeout, CTX.stimulus_time_s
+                self.register_timeout, self.ctx.stimulus_time_s
             )
 
     def register_timeout(self, dt):
         logger.debug("Registering timeout")
-        CTX.reactions.append(("TIMEOUT", time.perf_counter_ns() - CTX.tic))
-        CTX.marker_writer.write(TIMEOUT_MRK)
-        CTX.window.pop_handlers()
+        self.ctx.reactions.append(
+            ("TIMEOUT", time.perf_counter_ns() - self.ctx.tic)
+        )
+        self.ctx.marker_writer.write(TIMEOUT_MRK)
+        self.ctx.window.pop_handlers()
         self.next_state()
 
     def random_wait(self):
@@ -161,22 +171,19 @@ class StroopTaskStateManager:
         Using the clock scheduler as sub ms accuracy is not needed anyways
         TODO: Benchmark accurarcy of the clock scheduler
         """
-        CTX.current_stimuli = []
+        self.ctx.current_stimuli = []
         pyglet.clock.schedule_once(
             self.next_state,
-            random.uniform(CTX.wait_time_min_s, CTX.wait_time_max_s),
+            random.uniform(self.ctx.wait_time_min_s, self.ctx.wait_time_max_s),
         )
 
     def end_block(self):
         """End the block and log the results"""
 
         logger.debug("Ending block")
-        logger.info(f"{CTX.reactions}")
-        CTX.marker_writer.write(ENDBLOCK_MRK)
-        close_context()
-
-
-SMGR = StroopTaskStateManager()
+        logger.info(f"{self.ctx.reactions}")
+        self.ctx.marker_writer.write(ENDBLOCK_MRK)
+        close_context(self.ctx)
 
 
 # ----------------------------------------------------------------------------
@@ -184,12 +191,12 @@ SMGR = StroopTaskStateManager()
 # ----------------------------------------------------------------------------
 
 
-def close_context():
+def close_context(ctx: Context):
     """Close the context stopping all pyglet elements"""
-    CTX.window.close()
+    ctx.window.close(ctx)
 
 
-def create_stimuli():
+def create_stimuli(ctx: Context):
     """Create stimuli for the stroop task using WORD_COLOR_PAIRS"""
 
     stimuli = {
@@ -197,8 +204,8 @@ def create_stimuli():
             text="+",
             color=(80, 80, 80, 255),
             font_size=56,
-            x=CTX.window.width / 2,
-            y=CTX.window.height / 2,
+            x=ctx.window.width / 2,
+            y=ctx.window.height / 2,
             anchor_x="center",
             anchor_y="center",
         ),
@@ -207,11 +214,11 @@ def create_stimuli():
             " congruent",
             color=(255, 255, 255, 255),
             font_size=36,
-            x=CTX.window.width / 2,
-            y=CTX.window.height / 2,
+            x=ctx.window.width / 2,
+            y=ctx.window.height / 2,
             anchor_x="center",
             anchor_y="center",
-            width=CTX.window.width * 0.8,
+            width=ctx.window.width * 0.8,
             multiline=True,
         ),
         "coherent": {
@@ -219,8 +226,8 @@ def create_stimuli():
                 text=cw,
                 color=cc,
                 font_size=36,
-                x=CTX.window.width / 2,
-                y=CTX.window.height / 2,
+                x=ctx.window.width / 2,
+                y=ctx.window.height / 2,
                 anchor_x="center",
                 anchor_y="center",
             )
@@ -237,17 +244,17 @@ def create_stimuli():
                     text=cw,
                     color=cc2,
                     font_size=36,
-                    x=CTX.window.width / 2,
-                    y=CTX.window.height / 2,
+                    x=ctx.window.width / 2,
+                    y=ctx.window.height / 2,
                     anchor_x="center",
                     anchor_y="center",
                 )
 
-    CTX.known_stimuli = stimuli
+    ctx.known_stimuli = stimuli
 
 
-def init_block(n_trials: int, incoherent_fraction: float):
-    """Initialize a block of trials
+def init_block(n_trials: int, incoherent_fraction: float, ctx: Context):
+    """Initialize a block of trials by modifying a context
 
     Parameters
     ----------
@@ -257,14 +264,16 @@ def init_block(n_trials: int, incoherent_fraction: float):
     incoherent_fraction : float
         fraction of incoherent trials within n_trials. Will be rounded down
         to next integer value
+    ctx: Context
+        the context to add to
 
     """
 
     # Prepare the stimuli
     n_incoherent = int(incoherent_fraction * n_trials)
     n_coherent = n_trials - n_incoherent
-    coherent_stimuli = CTX.known_stimuli["coherent"]
-    incoherent_stimuli = CTX.known_stimuli["incoherent"]
+    coherent_stimuli = ctx.known_stimuli["coherent"]
+    incoherent_stimuli = ctx.known_stimuli["incoherent"]
 
     stimuli = [
         (cw, incoherent_stimuli[cw])
@@ -277,7 +286,7 @@ def init_block(n_trials: int, incoherent_fraction: float):
     ]
     random.shuffle(stimuli)
 
-    CTX.block_stimuli = stimuli
+    ctx.block_stimuli = stimuli
 
 
 # ----------------------------------------------------------------------------
@@ -285,10 +294,9 @@ def init_block(n_trials: int, incoherent_fraction: float):
 # ----------------------------------------------------------------------------
 
 
-@CTX.window.event
-def on_draw():
-    CTX.window.clear()
-    for stim in CTX.current_stimuli:
+def on_draw(ctx: Context | None = None):
+    ctx.window.clear()
+    for stim in ctx.current_stimuli:
         stim.draw()
 
 
@@ -299,7 +307,9 @@ def on_key_press_handler(symbol, modifiers):
             close_context()
 
 
-def on_key_press_stroop_reaction_handler(symbol, modifiers):
+def on_key_press_stroop_reaction_handler(
+    symbol, modifiers, ctx: Context, smgr: StroopTaskStateManager
+):
     """Handle key presses and pop the latest handlers on response"""
     match symbol:
         case pyglet.window.key.ESCAPE:
@@ -307,40 +317,51 @@ def on_key_press_stroop_reaction_handler(symbol, modifiers):
         case pyglet.window.key.RIGHT:
             # Potential logging and LSL here
             logger.debug("RIGHT")
-            handle_reaction("RIGHT")
-            # breaking of by skipping scheduled manager event
+            handle_reaction("RIGHT", ctx, smgr)
+            # breaking of by skipping scheduled manager evctx
         case pyglet.window.key.LEFT:
             # Potential logging and LSL here
             logger.debug("LEFT")
-            handle_reaction("LEFT")
+            handle_reaction("LEFT", ctx, smgr)
 
 
-def handle_reaction(key: str):
+def handle_reaction(key: str, ctx: Context, smgr: StroopTaskStateManager):
     """
     First track the time, then deactivate scheduled callbacks and manually
     trigger the next callback
     """
-    CTX.reactions.append((key, time.perf_counter_ns() - CTX.tic))
-    CTX.marker_writer.write(REACTION_MRK)
-
-    CTX.window.pop_handlers()
-
+    ctx.reactions.append((key, time.perf_counter_ns() - ctx.tic))
+    ctx.marker_writer.write(REACTION_MRK)
+    ctx.window.pop_handlers()
     # Remove the scheduled callback because me trigger the next state directly
-    pyglet.clock.unschedule(SMGR.register_timeout)
+    pyglet.clock.unschedule(smgr.register_timeout)
 
     # trigger next state
-    SMGR.next_state()
+    smgr.next_state()
 
 
-def main():
-    logger.setLevel(10)
-    create_stimuli()
+def main(
+    n_trials: int = 10,
+    incoherent_fraction: float = 0.5,
+    debug_level: int | None = None,
+):
+    if debug_level:
+        logger.setLevel(debug_level)
 
-    # initialize with
-    init_block(n_trials=10, incoherent_fraction=0.5)
+    ctx = Context()
+    smgr = StroopTaskStateManager(ctx=ctx)
 
+    # Hook up the drawing callback
+    pon_draw = partial(on_draw, ctx=ctx)
+    ctx.window.push_handlers(on_draw=pon_draw)
+
+    # Init
+    create_stimuli(ctx)
+    init_block(n_trials, incoherent_fraction, ctx)
+
+    # Start running
     pyglet.clock.schedule_once(
-        lambda dt: SMGR.start_block(), 0.5
+        lambda dt: smgr.start_block(), 0.5
     )  # start after 1 sec
     pyglet.app.run()
 
