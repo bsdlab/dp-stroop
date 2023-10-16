@@ -7,6 +7,7 @@ from functools import partial
 
 import pyglet
 from fire import Fire
+from subprocess import Popen
 
 from stroop_task.utils.logging import logger
 from stroop_task.utils.marker import MarkerWriter
@@ -50,9 +51,11 @@ class Context:
 
     # time keeping
     tic: int = 0
+    marker_writer: MarkerWriter | None = None  
 
     # marker writer
-    marker_writer: MarkerWriter = MarkerWriter("COM4")
+    def __post_init__(self):
+        self.marker_writer: MarkerWriter = MarkerWriter("COM4")
 
 
 class StroopTaskStateManager:
@@ -141,7 +144,7 @@ class StroopTaskStateManager:
 
             mrk = (
                 CONGRUENT_MRK
-                if stim_name in WORD_COLOR_PAIRS
+                if stim_name in [e[0] for e in WORD_COLOR_PAIRS]
                 else INCONGRUENT_MRK
             )
 
@@ -193,7 +196,7 @@ class StroopTaskStateManager:
 
 def close_context(ctx: Context):
     """Close the context stopping all pyglet elements"""
-    ctx.window.close(ctx)
+    ctx.window.close()
 
 
 def create_stimuli(ctx: Context):
@@ -253,7 +256,7 @@ def create_stimuli(ctx: Context):
     ctx.known_stimuli = stimuli
 
 
-def init_block(n_trials: int, incoherent_fraction: float, ctx: Context):
+def init_block_stimuli(n_trials: int, incoherent_fraction: float, ctx: Context):
     """Initialize a block of trials by modifying a context
 
     Parameters
@@ -286,6 +289,7 @@ def init_block(n_trials: int, incoherent_fraction: float, ctx: Context):
     ]
     random.shuffle(stimuli)
 
+    logger.debug(f"block stimuli: {stimuli}")
     ctx.block_stimuli = stimuli
 
 
@@ -343,12 +347,13 @@ def handle_reaction(key: str, ctx: Context, smgr: StroopTaskStateManager):
 def main(
     n_trials: int = 10,
     incoherent_fraction: float = 0.5,
-    debug_level: int | None = None,
+    logger_level: int = 30,
 ):
-    if debug_level:
-        logger.setLevel(debug_level)
+    if logger_level:
+        logger.setLevel(logger_level)
 
     ctx = Context()
+
     smgr = StroopTaskStateManager(ctx=ctx)
 
     # Hook up the drawing callback
@@ -357,13 +362,22 @@ def main(
 
     # Init
     create_stimuli(ctx)
-    init_block(n_trials, incoherent_fraction, ctx)
-
+    init_block_stimuli(n_trials, incoherent_fraction, ctx)
     # Start running
     pyglet.clock.schedule_once(
         lambda dt: smgr.start_block(), 0.5
     )  # start after 1 sec
-    pyglet.app.run()
+    try:
+        pyglet.app.run()
+    finally:
+        close_context(ctx)
+
+
+def run_block_subprocess(**kwargs):
+    kwargs_str = " ".join([f"--{k} {v}" for k, v in kwargs.items()])
+    cmd = "python -m stroop_task.main " + kwargs_str
+    pid = Popen(cmd, shell=True)
+    return pid
 
 
 if __name__ == "__main__":

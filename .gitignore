@@ -152,3 +152,8 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+data/
+assets/
+
+test/understanding_pyglet.py
+test/plot_markertest.py
