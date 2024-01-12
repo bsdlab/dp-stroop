@@ -16,9 +16,12 @@ def main(port: int = 8080, ip: str = "127.0.0.1", loglevel: int = 30):
     logger.debug("Pcommands setup")
 
     server = DefaultServer(
-        port, ip=ip, pcommand_map=pcommand_map, name="stroop_paradigm"
+        port,
+        ip=ip,
+        pcommand_map=pcommand_map,
+        name="stroop_paradigm",
+        logger=logger,
     )
-    server.logger = logger
 
     # initialize to start the socket
     server.init_server()

@@ -4,10 +4,10 @@ import random
 import time
 from dataclasses import dataclass, field
 from functools import partial
+from subprocess import Popen
 
 import pyglet
 from fire import Fire
-from subprocess import Popen
 
 from stroop_task.utils.logging import logger
 from stroop_task.utils.marker import MarkerWriter
@@ -47,11 +47,11 @@ class Context:
     pre_stimulus_time_s: float = 1.0  # time to show the fixation
     wait_time_min_s: float = 1.0  # random wait lower bound
     wait_time_max_s: float = 2.0  # random wait upper bound
-    instruction_time_s: float = 1.0  # time to show the instructions
+    instruction_time_s: float = 4.0  # time to show the instructions
 
     # time keeping
     tic: int = 0
-    marker_writer: MarkerWriter | None = None  
+    marker_writer: MarkerWriter | None = None
 
     # marker writer
     def __post_init__(self):
@@ -256,7 +256,9 @@ def create_stimuli(ctx: Context):
     ctx.known_stimuli = stimuli
 
 
-def init_block_stimuli(n_trials: int, incoherent_fraction: float, ctx: Context):
+def init_block_stimuli(
+    n_trials: int, incoherent_fraction: float, ctx: Context
+):
     """Initialize a block of trials by modifying a context
 
     Parameters

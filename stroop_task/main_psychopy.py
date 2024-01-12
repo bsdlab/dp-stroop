@@ -10,15 +10,22 @@ from subprocess import Popen
 from fire import Fire
 from psychopy import clock, core, event, visual
 
+from stroop_task.main import init_block_stimuli
 from stroop_task.utils.logging import logger
 from stroop_task.utils.marker import MarkerWriter
-from stroop_task.main import init_block_stimuli
+
+# WORD_COLOR_PAIRS = [
+#     ("red", (255, 0, 0, 255)),
+#     ("blue", (0, 0, 255, 255)),
+#     ("green", (0, 255, 0, 255)),
+#     ("yellow", (255, 255, 0, 255)),
+# ]
 
 WORD_COLOR_PAIRS = [
-    ("red", (255, 0, 0, 255)),
-    ("blue", (0, 0, 255, 255)),
-    ("green", (0, 255, 0, 255)),
-    ("yellow", (255, 255, 0, 255)),
+    ("rot", (255, 0, 0, 255)),
+    ("blau", (0, 0, 255, 255)),
+    ("grün", (0, 255, 0, 255)),
+    ("gelb", (255, 255, 0, 255)),
 ]
 
 STARTBLOCK_MRK = 251
@@ -35,7 +42,8 @@ TIMEOUT_MRK = 4
 @dataclass
 class Context:
     screen_ix: int = 0
-    screen_size: tuple[int, int] = (1680, 1050)
+    # screen_size: tuple[int, int] = (1680, 1050)
+    screen_size: tuple[int, int] = (2600, 1450)
     fullscr: bool = False
     data_dir: Path = Path("./data/")
     script_dir: Path = Path("./stroop_task/")
@@ -51,7 +59,7 @@ class Context:
     pre_stimulus_time_s: float = 1.0  # time to show the fixation
     wait_time_min_s: float = 1.0  # random wait lower bound
     wait_time_max_s: float = 2.0  # random wait upper bound
-    instruction_time_s: float = 3.0  # time to show the instructions
+    instruction_time_s: float = 5.0  # time to show the instructions
 
     def __init__(self):
         self.window = visual.Window(
@@ -61,9 +69,8 @@ class Context:
             screen=self.screen_ix,
             color=self.win_color,
         )
-    # marker writer
+        # marker writer
         self.marker_writer: MarkerWriter = MarkerWriter("COM4")
-
 
 
 class StroopTaskStateManager:
@@ -77,7 +84,7 @@ class StroopTaskStateManager:
         ctx: Context,
         n_trials: int = 10,
         incongruent_fraction: float = 0.5,
-        look_for_late_keys: bool = True,   # register late keys response
+        look_for_late_keys: bool = True,  # register late keys response
         flip: bool = True,
     ):
         logger.info("Initialising..")
@@ -122,6 +129,7 @@ class StroopTaskStateManager:
         init_block_stimuli(self.n_trials, self.incongruent_fraction, self.ctx)
 
         self.show_instructions()
+        time.sleep(self.ctx.instruction_time_s)
 
         # loop over stimuli in a single trial
         for stim_name, stim in self.ctx.block_stimuli:
@@ -154,8 +162,10 @@ class StroopTaskStateManager:
             self.send_marker(STARTTRIAL_MRK)
             self.frame["fixation"] = self.fixation
             self.draw_and_flip()
-            core.wait(self.ctx.pre_stimulus_time_s,
-                      hogCPUperiod=self.ctx.pre_stimulus_time_s)
+            core.wait(
+                self.ctx.pre_stimulus_time_s,
+                hogCPUperiod=self.ctx.pre_stimulus_time_s,
+            )
 
             # stimulus
             self.clear_frame()
@@ -178,7 +188,6 @@ class StroopTaskStateManager:
                 keys = []
 
             else:
-
                 self.send_marker(TIMEOUT_MRK)
                 logger.info("No Reaction")
 
@@ -187,7 +196,6 @@ class StroopTaskStateManager:
             self.draw_and_flip()
 
             self.send_marker(ENDTRIAL_MRK)
-
 
         # Clean-up
         self.send_marker(ENDBLOCK_MRK)
@@ -225,6 +233,7 @@ class StroopTaskStateManager:
 #                      Initialization and cleanup
 # ----------------------------------------------------------------------------
 
+
 def close_context(ctx: Context):
     """Close the context stopping all pyglet elements"""
     ctx.window.close()
@@ -242,8 +251,8 @@ def create_stimuli(ctx: Context):
             win=ctx.window,
         ),
         "instructions": visual.TextStim(
-            text="Please perform the stroop task `<` for incongruent, `>` for"
-            " congruent",
+            # text="Please perform the stroop task `<` for incongruent, `>` for congruent",
+            text="Farbe passt nicht zu Text: drücke `<-` \n\nFarbe passt: drücke `<-`",
             color=(250, 250, 250, 255),
             units="norm",
             win=ctx.window,
@@ -306,8 +315,10 @@ def main(
 
     try:
         smgr = StroopTaskStateManager(
-            ctx=ctx, n_trials=n_trials,
-            incongruent_fraction=incongruent_fraction)
+            ctx=ctx,
+            n_trials=n_trials,
+            incongruent_fraction=incongruent_fraction,
+        )
         smgr.exec_block(
             block_nr=block_nr,
             stim=stim,
@@ -315,6 +326,7 @@ def main(
 
     finally:
         close_context(ctx)
+
 
 def run_block_subprocess(**kwargs):
     kwargs_str = " ".join([f"--{k} {v}" for k, v in kwargs.items()])
