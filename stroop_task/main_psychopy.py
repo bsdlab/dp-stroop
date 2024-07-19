@@ -226,6 +226,7 @@ class StroopTaskStateManager:
         else:
             raise ValueError(
                 "Please provide an int value < 256 to be written as a marker"
+                f" - received: {val=}"
             )
 
 
