@@ -69,9 +69,10 @@ class MarkerWriter(object):
         """
         lsl_marker = lsl_marker or str(data)
         # Send to LSL Outlet
-        self.stream_outlet.push_sample(lsl_marker)
-        if logger:
-            logger.info(f"Pushing sample {data}")
+        self.logger.debug(f"Pushing to lsl {lsl_marker}")
+        self.stream_outlet.push_sample([lsl_marker])
+        if self.logger:
+            self.logger.info(f"Pushing sample {data}")
 
         ret = self.serial_write(data)
 
@@ -107,6 +108,13 @@ class MarkerWriter(object):
         self.port = None
         self.write = self.dummy_write
 
-    def dummy_write(self, data, **kwargs):
+    def dummy_write(self, data, lsl_marker: str | None = None):
         """Overwriting the write to pp"""
         print(f"PPort would write data: {data}")
+
+        lsl_marker = lsl_marker or str(data)
+        # Send to LSL Outlet
+        self.logger.debug(f"Pushing to lsl {lsl_marker}")
+        self.stream_outlet.push_sample([lsl_marker])
+        if self.logger:
+            self.logger.info(f"Pushing sample {data}")
