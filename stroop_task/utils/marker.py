@@ -6,12 +6,11 @@ from stroop_task.utils.logging import logger
 
 
 class MarkerWriter(object):
-
     """Class for interacting with the virtual serial
     port provided by the BV TriggerBox and an LSL marker stream
     """
 
-    def __init__(self, serial_nr: str, pulsewidth: float = 0.01):
+    def __init__(self, serial_nr: str | None = None, pulsewidth: float = 0.01):
         """Open the port at the given serial_nr
 
         Parameters
@@ -25,6 +24,8 @@ class MarkerWriter(object):
         """
         try:
             self.port = serial.Serial(serial_nr)
+            if not self.port.isOpen():
+                self.port.open()
         except (
             serial.SerialException
         ):  # if trigger box is not available at given serial_nr
@@ -38,20 +39,27 @@ class MarkerWriter(object):
             type="Markers",
             channel_count=1,
             nominal_srate=0,  # irregular stream
-            channel_format="int32",
+            channel_format="string",
             source_id="myStroopParadigmMarkerStream",
         )
         self.stream_outlet = StreamOutlet(self.stream_info)
-        self.logger: logger | None = None
+        self.logger: logger | None = logger
 
-    def write(self, data):
+        # have different writer instances for different hardware triggers
+        self.serial_write = self.bv_trigger_box_write
+
+    def write(self, data, lsl_marker: str | None = None) -> int:
         """
 
         Parameters
         ----------
 
         data:  list of int(s), byte or bytearray
-            data to be written to the port
+            data to be written to the serial port
+
+        lsl_marker: str | None
+            if None, the data is written to the serial port and the LSL stream
+            otherwise the `lsl_marker` is written to the LSL stream
 
         Returns
         -------
@@ -59,12 +67,22 @@ class MarkerWriter(object):
             number of bytes written
 
         """
+        lsl_marker = lsl_marker or str(data)
         # Send to LSL Outlet
-        self.stream_outlet.push_sample(data)
+        self.stream_outlet.push_sample(lsl_marker)
         if logger:
             logger.info(f"Pushing sample {data}")
 
-        # Set a base value as trigger will only emit once change from base is written
+        ret = self.serial_write(data)
+
+        return ret
+
+    def utf8_write(self, data: bytes) -> int:
+        ret = self.port.write(data)
+        return ret
+
+    def bv_trigger_box_write(self, data) -> int:
+
         self.port.write([0])
         sleep_s(self.pulsewidth)
         ret = self.port.write(data)
@@ -89,6 +107,6 @@ class MarkerWriter(object):
         self.port = None
         self.write = self.dummy_write
 
-    def dummy_write(self, data):
+    def dummy_write(self, data, **kwargs):
         """Overwriting the write to pp"""
         print(f"PPort would write data: {data}")
