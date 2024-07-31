@@ -228,7 +228,7 @@ class StroopTaskStateManager:
         self.ctx.current_stimuli = [text]
 
         pyglet.clock.schedule_once(
-            self.end_block, self.ctx.results_show_time_s
+            lambda dt: self.end_block(), self.ctx.results_show_time_s
         )
 
     def end_block(self):
