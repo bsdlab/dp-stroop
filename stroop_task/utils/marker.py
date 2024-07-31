@@ -78,8 +78,8 @@ class MarkerWriter(object):
 
         return ret
 
-    def utf8_write(self, data: bytes) -> int:
-        ret = self.port.write(data)
+    def utf8_write(self, data: int) -> int:
+        ret = self.port.write(bytes(chr(data), encoding="utf8"))
         return ret
 
     def bv_trigger_box_write(self, data) -> int:
