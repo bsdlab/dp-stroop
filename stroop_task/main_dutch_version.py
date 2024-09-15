@@ -127,9 +127,7 @@ class StroopTaskStateManager:
         curr_i = self.states.index(self.current_state)
         next_i = (curr_i + 1) % len(self.states)
         next_state = self.states[next_i]
-        logger.debug(
-            f"Transitioning from `{self.current_state}` to " f"`{next_state}`"
-        )
+        logger.debug(f"Transitioning from `{self.current_state}` to " f"`{next_state}`")
         self.current_state = next_state
         self.transition_map[next_state]()
         if next_state == "fixation":
@@ -138,22 +136,22 @@ class StroopTaskStateManager:
     def show_fixation(self):
         self.ctx.marker_writer.write(STARTTRIAL_MRK, lsl_marker="start_trial")
         self.ctx.current_stimuli = [self.ctx.known_stimuli["fixation"]]
-        pyglet.clock.schedule_once(
-            self.next_state, self.ctx.pre_stimulus_time_s
-        )
+        pyglet.clock.schedule_once(self.next_state, self.ctx.pre_stimulus_time_s)
 
     def show_stimulus(self):
         """Show the next stimulus in the self.ctx.block_stimuli list"""
-        self.ctx.current_stimulus_idx += 1
 
         logger.debug(f"Showing stimulus {self.ctx.current_stimulus_idx}")
         # Go to end of block from here
-        if self.ctx.current_stimulus_idx + 1 > len(self.ctx.block_stimuli):
+        if self.ctx.current_stimulus_idx == len(self.ctx.block_stimuli):
             self.show_mean_reaction_time()
         else:
             stim_name, stim_label = self.ctx.block_stimuli[
                 self.ctx.current_stimulus_idx
             ]
+
+            # Move increment to end as otherwise stimulus at idx==0 is not shown
+            self.ctx.current_stimulus_idx += 1
 
             logger.info(f"Showing stimulus {stim_name=}")
 
@@ -174,24 +172,18 @@ class StroopTaskStateManager:
 
             # Start showing stimuli
             self.ctx.current_stimuli = [stim_label]
-            self.ctx.marker_writer.write(
-                mrk, lsl_marker=f"{stim_name}|{stim_label}"
-            )
+            self.ctx.marker_writer.write(mrk, lsl_marker=f"{stim_name}|{stim_label}")
 
             # start taking time
             self.ctx.tic = time.perf_counter_ns()
 
             # Set scheduled timeout << if it reaches here, we timed out
-            pyglet.clock.schedule_once(
-                self.register_timeout, self.ctx.stimulus_time_s
-            )
+            pyglet.clock.schedule_once(self.register_timeout, self.ctx.stimulus_time_s)
 
     def register_timeout(self, dt):
         rtime_s = (time.perf_counter_ns() - self.ctx.tic) / 1e9
         self.ctx.reactions.append(("TIMEOUT", rtime_s))
-        self.ctx.marker_writer.write(
-            TIMEOUT_MRK, lsl_marker="timeout|{rtime_s=}"
-        )
+        self.ctx.marker_writer.write(TIMEOUT_MRK, lsl_marker="timeout|{rtime_s=}")
         logger.info(f"Reaction timeout: {rtime_s=}")
         self.ctx.window.pop_handlers()
         self.next_state()
@@ -317,9 +309,7 @@ def create_stimuli(ctx: Context):
     ctx.known_stimuli = stimuli
 
 
-def init_block_stimuli(
-    n_trials: int, incoherent_fraction: float, ctx: Context
-):
+def init_block_stimuli(n_trials: int, incoherent_fraction: float, ctx: Context):
     """Initialize a block of trials by modifying a context
 
     Parameters
@@ -344,9 +334,7 @@ def init_block_stimuli(
 
     stimuli = [
         (cw, incoherent_stimuli[cw])
-        for cw in random.choices(
-            list(incoherent_stimuli.keys()), k=n_incoherent
-        )
+        for cw in random.choices(list(incoherent_stimuli.keys()), k=n_incoherent)
     ] + [
         (cw, coherent_stimuli[cw])
         for cw in random.choices(list(coherent_stimuli.keys()), k=n_coherent)
@@ -400,9 +388,7 @@ def handle_reaction(key: str, ctx: Context, smgr: StroopTaskStateManager):
     """
     rtime_s = (time.perf_counter_ns() - ctx.tic) / 1e9
     ctx.reactions.append((key, rtime_s))
-    ctx.marker_writer.write(
-        REACTION_MRK, lsl_marker=f"reaction_{key}|{rtime_s=}"
-    )
+    ctx.marker_writer.write(REACTION_MRK, lsl_marker=f"reaction_{key}|{rtime_s=}")
     logger.info(f"Reaction time: {rtime_s=}")
     ctx.window.pop_handlers()
     # Remove the scheduled timeout callback because we trigger the next state directly
@@ -444,9 +430,7 @@ def main(
     create_stimuli(ctx)
     init_block_stimuli(n_trials, incoherent_fraction, ctx)
     # Start running
-    pyglet.clock.schedule_once(
-        lambda dt: smgr.start_block(), 0.5
-    )  # start after 1 sec
+    pyglet.clock.schedule_once(lambda dt: smgr.start_block(), 0.5)  # start after 1 sec
     try:
         pyglet.app.run()
     finally:
