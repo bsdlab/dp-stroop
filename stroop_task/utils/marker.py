@@ -1,6 +1,5 @@
 import serial
 from pylsl import StreamInfo, StreamOutlet
-
 from stroop_task.utils.clock import sleep_s
 from stroop_task.utils.logging import logger
 

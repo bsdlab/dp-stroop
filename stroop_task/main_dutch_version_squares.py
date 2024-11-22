@@ -16,10 +16,6 @@ from stroop_task.utils.marker import MarkerWriter
 # from utils.marker import MarkerWriter
 
 WORD_COLOR_PAIRS = [
-    # ("red", (255, 0, 0, 255)),
-    # ("blue", (0, 0, 255, 255)),
-    # ("green", (0, 255, 0, 255)),
-    # ("yellow", (255, 255, 0, 255)),
     ("rood", (255, 0, 0, 255)),
     ("blauw", (0, 0, 255, 255)),
     ("groen", (0, 255, 0, 255)),
@@ -36,10 +32,7 @@ INCONGRUENT_MRK = 0  # 2
 REACTION_MRK = 16  # 3
 TIMEOUT_MRK = 16  # 4
 
-
-# Adjust the marker writer to match writing convention for Maastricht
-def utf8_enc(data: int):
-    return bytes(chr(data), encoding="utf8")
+SQUARE_WIDTH = 200
 
 
 # A data structure for easier access
@@ -52,7 +45,7 @@ class Context:
     known_stimuli: dict = field(default_factory=dict)
     lsl_outlet: object = None
     current_stimulus_idx: int = 0  # will be used to index block stimuli
-    current_stimuli: list[pyglet.text.Label] = field(
+    current_stimuli: list[pyglet.text.Label, pyglet.shapes.Rectangle] = field(
         default_factory=list
     )  # tracking stimuli for drawing
 
@@ -69,6 +62,9 @@ class Context:
     # time keeping
     tic: int = 0
     marker_writer: MarkerWriter | None = None
+    focus: str = (
+        "text"  # can be `text` or `color` (font color), determines which would be considered as correct
+    )
 
     # marker writer
     def __post_init__(self):
@@ -142,18 +138,22 @@ class StroopTaskStateManager:
         """Show the next stimulus in the self.ctx.block_stimuli list"""
 
         logger.debug(f"Showing stimulus {self.ctx.current_stimulus_idx}")
+
         # Go to end of block from here
         if self.ctx.current_stimulus_idx == len(self.ctx.block_stimuli):
             self.show_mean_reaction_time()
         else:
-            stim_name, stim_label = self.ctx.block_stimuli[
-                self.ctx.current_stimulus_idx
-            ]
+            stim_name, stim_label, square_left, square_right, correct_direction = (
+                self.ctx.block_stimuli[self.ctx.current_stimulus_idx]
+            )
 
             # Move increment to end as otherwise stimulus at idx==0 is not shown
             self.ctx.current_stimulus_idx += 1
 
-            logger.info(f"Showing stimulus {stim_name=}")
+            logger.info(
+                f"Showing stimulus {stim_name=}, left_square={square_left.color}, "
+                f"right_square={square_right.color} - {correct_direction=}"
+            )
 
             # Starting to listen to keyboard input
             self.ctx.window.push_handlers(
@@ -171,7 +171,7 @@ class StroopTaskStateManager:
             )
 
             # Start showing stimuli
-            self.ctx.current_stimuli = [stim_label]
+            self.ctx.current_stimuli = [stim_label, square_left, square_right]
             self.ctx.marker_writer.write(mrk, lsl_marker=f"{stim_name}|{stim_label}")
 
             # start taking time
@@ -306,11 +306,33 @@ def create_stimuli(ctx: Context):
                     anchor_y="center",
                 )
 
+    # add the squares in each color left and right positioned
+    for pos in ["left", "right"]:
+        for cw, cc in WORD_COLOR_PAIRS:
+            stimuli["rect_" + cw + "_" + pos] = pyglet.shapes.Rectangle(
+                x=(
+                    ctx.window.width / 2
+                    - (
+                        200 + SQUARE_WIDTH
+                    )  # x is always the left edge position -> adding the width
+                    if pos == "left"
+                    else ctx.window.width / 2 + 200
+                ),
+                y=ctx.window.height / 2 - 300,
+                width=SQUARE_WIDTH,
+                height=SQUARE_WIDTH,
+                color=cc,
+            )
+
     ctx.known_stimuli = stimuli
 
 
 def init_block_stimuli(n_trials: int, incoherent_fraction: float, ctx: Context):
-    """Initialize a block of trials by modifying a context
+    """Initialize a block of trials by modifying a context. The stimuli will
+    be accessible in ctx.block_stimuli as list of tuples
+    (word, pyglet.text.Label, pyglet.shapes.Rectangle, pyglet.shapes.Rectangle, str)
+    The shapes are the squares that will be shown left and right of the word, while
+    the final string indicates the correct direction
 
     Parameters
     ----------
@@ -324,21 +346,66 @@ def init_block_stimuli(n_trials: int, incoherent_fraction: float, ctx: Context):
         the context to add to
 
     """
-
     # Prepare the stimuli
-
     n_incoherent = int(incoherent_fraction * n_trials)
     n_coherent = n_trials - n_incoherent
+
+    assert n_incoherent % 2 == 0 and n_coherent % 2 == 0, (
+        f"Please select {n_trials=} and {incoherent_fraction=} such that the"
+        f" resulting {n_incoherent=} and {n_coherent=} are even numbers. This"
+        " is relevant to balance the correct directions."
+    )
+
     coherent_stimuli = ctx.known_stimuli["coherent"]
     incoherent_stimuli = ctx.known_stimuli["incoherent"]
 
-    stimuli = [
-        (cw, incoherent_stimuli[cw])
-        for cw in random.choices(list(incoherent_stimuli.keys()), k=n_incoherent)
-    ] + [
-        (cw, coherent_stimuli[cw])
-        for cw in random.choices(list(coherent_stimuli.keys()), k=n_coherent)
-    ]
+    # incoherent stims
+    correct_direction = ["left"] * (n_incoherent // 2) + ["right"] * (n_incoherent // 2)
+    random.shuffle(correct_direction)
+    stimuli_ic = []
+    for i, cw in enumerate(
+        random.choices(list(incoherent_stimuli.keys()), k=n_incoherent)
+    ):
+        correct_dir = correct_direction[i]
+        other_dir = "right" if correct_dir == "left" else "left"
+        if ctx.focus == "text":
+            corr = ctx.known_stimuli[f"rect_{cw.split("_")[0]}_{correct_dir}"]
+            incorr = ctx.known_stimuli[f"rect_{cw.split('_')[1]}_{other_dir}"]
+        elif ctx.focus == "color":
+            corr = ctx.known_stimuli[f"rect_{cw.split("_")[1]}_{correct_dir}"]
+            incorr = ctx.known_stimuli[f"rect_{cw.split('_')[0]}_{other_dir}"]
+        else:
+            raise ValueError(f"Invalid {ctx.focus=}, should be `text` or `color`")
+
+        sq_left, sq_right = (corr, incorr) if correct_dir == "left" else (incorr, corr)
+
+        stimuli_ic.append(
+            (cw, incoherent_stimuli[cw], sq_left, sq_right, correct_direction[i])
+        )
+
+    # coherent stims
+    correct_direction = ["left"] * (n_incoherent // 2) + ["right"] * (n_incoherent // 2)
+    random.shuffle(correct_direction)
+    stimuli_c = []
+    for i, cw in enumerate(random.choices(list(coherent_stimuli.keys()), k=n_coherent)):
+        correct_dir = correct_direction[i]
+        other_dir = "right" if correct_dir == "left" else "left"
+
+        corr = ctx.known_stimuli[f"rect_{cw}_{correct_dir}"]
+        icw = random.choices(
+            [colorword for colorword in coherent_stimuli.keys() if colorword != cw], k=1
+        )[0]
+
+        incorr = ctx.known_stimuli[f"rect_{icw}_{other_dir}"]
+
+        sq_left, sq_right = (corr, incorr) if correct_dir == "left" else (incorr, corr)
+
+        stimuli_c.append(
+            (cw, coherent_stimuli[cw], sq_left, sq_right, correct_direction[i])
+        )
+
+    stimuli = stimuli_ic + stimuli_c
+
     random.shuffle(stimuli)
 
     logger.debug(f"block stimuli: {stimuli}")
@@ -414,11 +481,12 @@ def run_paradigm(
     n_trials: int = 4,
     incoherent_fraction: float = 0.5,
     logger_level: int = 10,
+    focus: str = "text",
 ):
     if logger_level:
         logger.setLevel(logger_level)
 
-    ctx = Context()
+    ctx = Context(focus=focus)
 
     smgr = StroopTaskStateManager(ctx=ctx)
 
@@ -439,7 +507,7 @@ def run_paradigm(
 
 def run_block_subprocess(**kwargs):
     kwargs_str = " ".join([f"--{k} {v}" for k, v in kwargs.items()])
-    cmd = "python -m stroop_task.main_dutch_version " + kwargs_str
+    cmd = "python -m stroop_task.main_dutch_version_squares " + kwargs_str
     pid = Popen(cmd, shell=True)
     return pid
 
