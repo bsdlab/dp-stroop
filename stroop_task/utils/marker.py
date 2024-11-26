@@ -27,6 +27,8 @@ class MarkerWriter(object):
             Seconds to sleep between base and final write to the PPort
 
         """
+        self.debug = debug
+        self.port = None
         try:
             self.port = serial.Serial(serial_nr)
             if not self.port.isOpen():
