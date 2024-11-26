@@ -66,10 +66,13 @@ class Context:
     focus: str = (
         "text"  # can be `text` or `color` (font color), determines which would be considered as correct
     )
+    debug_marker_writer: bool = False
 
     # marker writer
     def __post_init__(self):
-        self.marker_writer: MarkerWriter = MarkerWriter("COM9")
+        self.marker_writer: MarkerWriter = MarkerWriter(
+            "COM9", debug=self.debug_marker_writer
+        )
         self.marker_writer.serial_write = self.marker_writer.utf8_write
 
 
@@ -480,11 +483,12 @@ def run_paradigm(
     n_trials: int = 6,
     logger_level: int = 10,
     focus: str = "text",
+    debug_marker_writer: bool = False,
 ):
     if logger_level:
         logger.setLevel(logger_level)
 
-    ctx = Context(focus=focus)
+    ctx = Context(focus=focus, debug_marker_writer=debug_marker_writer)
 
     smgr = StroopTaskStateManager(ctx=ctx)
 

@@ -1,5 +1,6 @@
 import serial
 from pylsl import StreamInfo, StreamOutlet
+
 from stroop_task.utils.clock import sleep_s
 from stroop_task.utils.logging import logger
 
@@ -9,7 +10,12 @@ class MarkerWriter(object):
     port provided by the BV TriggerBox and an LSL marker stream
     """
 
-    def __init__(self, serial_nr: str | None = None, pulsewidth: float = 0.01):
+    def __init__(
+        self,
+        serial_nr: str | None = None,
+        pulsewidth: float = 0.01,
+        debug: bool = False,
+    ):
         """Open the port at the given serial_nr
 
         Parameters
@@ -25,11 +31,12 @@ class MarkerWriter(object):
             self.port = serial.Serial(serial_nr)
             if not self.port.isOpen():
                 self.port.open()
-        except (
-            serial.SerialException
-        ):  # if trigger box is not available at given serial_nr
-            print(f"Starting DUMMY as connection with {serial_nr=} failed")
-            self.create_dummy(serial_nr)
+        except Exception as e:  # if trigger box is not available at given serial_nr
+            if self.debug:
+                print(f"Starting DUMMY as connection with {serial_nr=} failed")
+                self.create_dummy(serial_nr)
+            else:
+                raise e
 
         self.pulsewidth = pulsewidth
 
