@@ -1,0 +1,19 @@
+markers:
+  # Reduced set of markers for the Maastricht setup (we do not have more channel for the current EEG system -> change once LSL/AO is used)
+  startblock_mrk: 64 # 251
+  endblock_mrk: 64 # 254
+  starttrial_mrk: 2 # 252
+  endtrial_mrk: 4 # 253
+  congruent_mrk: 0 # 1
+  incongruent_mrk: 0 # 2
+  lift_off_mrk: 8 # 8               # marker for arrow down lift
+  reaction_mrk: 16 # 3              # marker for key press reaction
+  timeout_mrk: 16 # 4
+
+general:
+  stimulus_time_s: 3.0 # number of seconds to react -> time out after
+  pre_stimulus_time_s: 1.0 # time to show the fixation
+  wait_time_min_s: 1.0 # random wait lower bound
+  wait_time_max_s: 2.0 # random wait upper bound
+  instruction_time_s: 1000.0 # time to show the instructions, basically show until key press
+  results_show_time_s: 5.0 # time to show the results
