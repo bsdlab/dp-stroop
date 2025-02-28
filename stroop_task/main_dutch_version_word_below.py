@@ -36,11 +36,15 @@ SQUARE_WIDTH = 200
 WHITE_Y_OFFSET_PX = 100
 
 
+class DummyMarkerWriter:
+    def write(self, val, *args, **kwargs):
+        print(val)
+
+
 # A data structure for easier access
 @dataclass
 class Context:
-    window: pyglet.window.Window = pyglet.window.Window(height=500, width=800)
-    window.set_fullscreen(False)
+    window: pyglet.window.BaseWindow = pyglet.window.Window(height=500, width=800)
     reactions: list = field(default_factory=list)  # tracking
     block_stimuli: list = field(default_factory=list)
     known_stimuli: dict = field(default_factory=dict)
@@ -62,7 +66,7 @@ class Context:
 
     # time keeping
     tic: int = 0
-    marker_writer: MarkerWriter | None = None
+    # marker_writer: MarkerWriter | None = None
     focus: str = (
         "text"  # can be `text` or `color` (font color), determines which would be considered as correct
     )
@@ -70,10 +74,11 @@ class Context:
 
     # marker writer
     def __post_init__(self):
-        self.marker_writer: MarkerWriter = MarkerWriter(
-            "COM9", debug=self.debug_marker_writer
-        )
-        self.marker_writer.serial_write = self.marker_writer.utf8_write
+        # self.marker_writer: MarkerWriter = MarkerWriter(
+        #     "COM9", debug=self.debug_marker_writer
+        # )
+        # self.marker_writer.serial_write = self.marker_writer.utf8_write
+        self.marker_writer = DummyMarkerWriter()
 
 
 class StroopTaskStateManager:
