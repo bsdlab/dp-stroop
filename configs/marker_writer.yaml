@@ -1,0 +1,8 @@
+serial_port: "COM9" # COM9 for standard Notebook in Maastricht
+
+# For testing and debuggin without a serial port device attached, change to `serial=False` and `logger=True`
+write_to_lsl: True
+write_to_serial: True
+write_to_logger: False
+
+utf8_encoded: True # if True,  `serial.write(bytes(chr(data), encoding="utf8"))` will be used to write to the serial port (used for Maastricht trigger box)

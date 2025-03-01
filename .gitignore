@@ -153,7 +153,5 @@ dmypy.json
 cython_debug/
 
 data/
-assets/
-
-test/understanding_pyglet.py
-test/plot_markertest.py
+analysis/
+logs/
