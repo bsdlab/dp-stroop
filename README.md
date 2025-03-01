@@ -63,7 +63,7 @@ python -m stroop_task.main --n_trials=6
 1. Self-paced
 
 ```bash
-python -m stroop_task.main --n_trials=6
+python -m stroop_task.main --n_trials=6 --random_wait=True
 ```
 
 Note that this is reducing the number of trials to give a quick look-and-feel. The default is 60 trials.
