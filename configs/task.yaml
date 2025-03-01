@@ -17,3 +17,4 @@ general:
   wait_time_max_s: 2.0 # random wait upper bound
   instruction_time_s: 1000.0 # time to show the instructions, basically show until key press
   results_show_time_s: 5.0 # time to show the results
+  arrow_down_press_to_continue_s: 0.5 # time that the arrow down needs to be pressed to start the next trial

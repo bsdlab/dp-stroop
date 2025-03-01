@@ -24,14 +24,13 @@ def test_dutch_loading():
     ctx = load_context_test(language="dutch")
     words_cfg = yaml.safe_load(open("./configs/dutch.yaml"))
 
-    for k, v in words_cfg.items():
+    for k, v in words_cfg["words"].items():
         assert ctx.word_color_dict[k] == v  # the default for now
 
 
 def test_ctx_overwrite():
     ctx = load_context_test(
         endblock_mrk=123,
-        should_be_ignored_because_not_an_attribute="this",
     )
 
     assert ctx.endblock_mrk == 123

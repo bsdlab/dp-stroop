@@ -1,0 +1,28 @@
+words:
+  Rot: "(255, 0, 0, 255)"
+  Blau: "(0, 0, 255, 255)"
+  Grün: "(0, 255, 0, 255)"
+  Gelb: "(255, 255, 0, 255)"
+
+msgs:
+  mean_reaction_time: "Ihre durchschnittliche Reaktionszeit beträgt:"
+  instruction_headline: |
+    Vielen Dank für Ihre Teilnahme an dieser Aufgabe.
+
+  press_down_instruction: |
+    Drücken Sie die Pfeil-nach-unten-Taste
+    und halten Sie sie gedrückt, um zu starten,
+    sobald das Kreuz erscheint.
+
+  congruent_reaction_color_focus: |
+    Drücken Sie die Pfeil-nach-rechts-Taste,
+    wenn die Farbe des oberen Wortes
+    mit dem Text darunter übereinstimmt.
+
+  incongruent_reaction_color_focus: |
+    Drücken Sie die Pfeil-nach-links-Taste,
+    wenn die Farbe des oberen Wortes
+    NICHT mit dem Text darunter übereinstimmt.
+
+  instruction_footer: |
+    Drücken Sie die Leertaste, um zu beginnen.

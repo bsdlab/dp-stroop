@@ -1,14 +1,30 @@
 # main stroop words
-red: "(255, 0, 0, 255)"
-blue: "(0, 0, 255, 255)"
-green: "(0, 255, 0, 255)"
-yellow: "(255, 255, 0, 255)"
+words:
+  red: "(255, 0, 0, 255)"
+  blue: "(0, 0, 255, 255)"
+  green: "(0, 255, 0, 255)"
+  yellow: "(255, 255, 0, 255)"
 
 # messages
 msgs:
   mean_reaction_time: "Your average reaction time is:"
-  instruction: |
-    "Thank you for participating in this task. Please look at the coloured words."
-    "If word meaning and colour do NOT match then press `<`.\n"
-    "If word meaning and colour match please press `>`.\n" 
-    "Press space to start"
+  instruction_headline: |
+    Thank you for participating in this task.
+
+  press_down_instruction: |
+    Press the arrow down key
+    and hold it to start
+    once the cross appears.
+
+  congruent_reaction_color_focus: |
+    Press the arrow right
+    key if the color of top word matches
+    the text below.
+
+  incongruent_reaction_color_focus: |
+    Press the arrow left
+    key if the color of top word does NOT match
+    the text below.
+
+  instruction_footer: |
+    Press the space key to start.
