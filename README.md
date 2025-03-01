@@ -60,7 +60,7 @@ To run them, use the following:
 python -m stroop_task.main --n_trials=6
 ```
 
-1. Self-paced
+2. Random inter trial interval
 
 ```bash
 python -m stroop_task.main --n_trials=6 --random_wait=True
