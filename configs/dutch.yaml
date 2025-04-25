@@ -1,0 +1,34 @@
+words:
+  rood: "(255, 0, 0, 255)"
+  blauw: "(0, 0, 255, 255)"
+  groen: "(0, 255, 0, 255)"
+  geel: "(255, 255, 0, 255)"
+
+msgs:
+  mean_reaction_time: "Je gemiddelde reactietijd is:"
+  instruction_headline: |
+    Bedankt voor je deelname aan deze taak.
+
+  press_down_instruction: |
+    Druk op de pijldown-toets
+    en houd deze ingedrukt om te starten
+    zodra het kruis verschijnt.
+
+  congruent_reaction_color_focus: |
+    Druk op de pijl-rechts toets
+    als de kleur van het bovenste woord overeenkomt
+    met de tekst eronder.
+
+  incongruent_reaction_color_focus: |
+    Druk op de pijl-links toets
+    als de kleur van het bovenste woord NIET overeenkomt
+    met de tekst eronder.
+
+  instruction_footer: |
+    Druk op de spatiebalk om te beginnen.
+
+  instruction_headline_classical: |
+    Bedankt voor uw deelname aan deze taak. We vragen u nu om kleurwoorden van
+    een lijst te lezen en hardop de kleur uit te spreken waarin het woord
+    gedrukt staat, en NIET het woord zelf. 
+    Bijvoorbeeld: als u het woord ‘rood’ in blauwe letters ziet, moet u ‘blauw’ zeggen.

@@ -1,0 +1,6 @@
+white_y_offset_px: 100 # offset between first row word (in color) and second row word (white)
+font_size: 36
+instruction_font_size: 16
+fullscreen: False
+screen_width: 1920
+screen_height: 1080

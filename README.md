@@ -1,54 +1,110 @@
-# Stroop task
+# Dareplane Stroop Task
 
-A simple keyboard based Stroop task implementation for Dareplane using [`pyglet`](https://pyglet.readthedocs.io/en/latest/index.html) and another implementation using [`psychopy`](https://www.psychopy.org/).
+A Stroop task implementation for keyboard based execution following the design by [Zysset et al. 2001](https://www.sciencedirect.com/science/article/abs/pii/S1053811900906657).
 
-## Running the two word version of the stroop task
+## Installation
 
-Make sure the correct python environment is activated and the dependencies are installed.
-Then from within this repository run:
+The paradigm has been tested with `python 3.12` but should also run under older python versions as it is relatively light weight on requirements.
+You can check your python version with `python --version` from the terminal.
 
-```
-python -m stroop_task.main_dutch_version_word_below
-```
-
-You can provide command line arguments for setting, e.g., `n_trials`:
-
-```
-python -m stroop_task.main_dutch_version_word_below --n_trials=60
-```
-(For this task, `n_trials` should be a multiple of 6 for  proper balancing.)
-
-If you are debugging and do not have the marker box (serial connection at `COM9`) available, run with
-
-
-```
-python -m stroop_task.main_dutch_version_word_below --debug_marker_writer=True
-```
-
-## Starting other scripts standalone
-
-To start the task standalone run either of:
-
-##### pyglet
+Start by cloning this repository:
 
 ```bash
-python -m stroop_task.main
+git clone git@github.com:bsdlab/dp-stroop.git
+cd dp-stroop
 ```
 
-##### psychopy
+#### Virtual environment
+
+Optionally, create a virtual environment
 
 ```bash
-python -m stroop_task.main_psychopy
-
+python -m venv stroop_venv
 ```
 
-## Starting the Dareplane server
-
-To start the server standalone (not from within a [`control_room`](https://github.com/bsdlab/dp-control-room)), use:
+then activate with
 
 ```bash
-python -m api.server
+# for Unix
+source ./stroop_venv/bin/activate
+
+# for powershell on Window
+.\stroop_venv\Scripts\activate.ps
+
+# for cmd on Window
+.\stroop_venv\Scripts\activate.bat
+
 ```
 
-Then you should be able to connect via `telnet` on `127.0.0.1 8080` for testing purposes.
+#### Requirements
 
+Install requirements with pip
+
+```bash
+pip install -U pip
+pip install -r requirements.txt
+```
+
+## Running the paradigm
+
+There are two incarnations of the modified Stroop paradigm:
+
+1.  A self-paced version, requesting the user to start each trial by pressing the arrow down button.
+1.  A random inter-trial-interval
+
+To run them, use the following:
+
+1. Self-paced
+
+```bash
+python -m stroop_task.main --n_trials=6
+```
+
+1. Self-paced
+
+```bash
+python -m stroop_task.main --n_trials=6 --random_wait=True
+```
+
+Note that this is reducing the number of trials to give a quick look-and-feel. The default is 60 trials.
+For a list of available CLI parameters, you can use `python -m stroop_task.main --help`
+
+### Running the classical equivalent
+
+There is also an implementation of an equivalent to the classical card based Stroop task, which can be run with:
+
+```bash
+python -m stroop_task.main --classical=True --language=german
+```
+
+This would start the classical equivalent in German language. The instruction asks the participant to read to color
+of the word out loud. And the experimenter is to track how far the participant read within a given time. It is suggested to
+print out the color tables, which are available under `./stroop_task/assets/`. Note that the files are generated on first
+call to the function. I.e., you might need to trigger a run once to see the `json` e.g. for `classical_list_nstim-60_perc_incongruent-0.33_lang-german.json`. It can also be handy to just take a screenshot of the table and print it for the experimenter to track incorrect words.
+The default timeout for the task is set to `45` seconds. But the parameter can be modulated with the `--classic_stroop_time_s` flag, e.g.:
+
+```bash
+python -m stroop_task.main --classical=True --classic_stroop_time_s=60   # for 60s timeout
+```
+
+## Configuration
+
+The configurations can be found under `./configs` and are sorted as follows:
+
+- `\<language\>.yaml`, e.g., `english.yaml`: Contain the language specific fields, such as the color words and the instruction text.
+- `gui.yaml`: Parameters regarding the `pyglet` window, such as size, font_size, fullscreen etc.
+  - Note: If the configured screensize does not match your screen, the text might appear of center, depending on your pyglet version. Make adjustments or run it in `fullscreen: False` mode.
+- `logging.yaml`: Parameters for the used logger, also including the log file
+- `marker_writer.yaml`: Parameters for how markers should be send and written, concerning e.g. the LSL stream or markers sent to serial port.
+- `task.yaml`: Parameters concerning the actual tasks, such as timing parameters or marker values
+
+<!-- ## Starting the Dareplane server -->
+<!---->
+<!-- To start the server standalone (not from within a [`control_room`](https://github.com/bsdlab/dp-control-room)), use: -->
+<!---->
+<!-- ```bash -->
+<!-- python -m api.server -->
+<!-- ``` -->
+<!---->
+<!-- Then you should be able to connect via `telnet` on `127.0.0.1 8080` for testing purposes. -->
+<!---->

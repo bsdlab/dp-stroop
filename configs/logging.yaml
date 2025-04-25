@@ -1,0 +1,2 @@
+level: "INFO" # "DEBUG", "INFO", "WARNING", "ERROR"
+log_file: "./logs/stroop_log.log"

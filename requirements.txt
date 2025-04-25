@@ -1,0 +1,10 @@
+dareplane_utils
+fire
+numpy
+pandas
+plotly
+pyglet
+pylsl
+pyserial
+pyxdf
+PyYAML
