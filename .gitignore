@@ -154,6 +154,7 @@ cython_debug/
 
 data/
 assets/
+analysis/
 
 test/understanding_pyglet.py
 test/plot_markertest.py
