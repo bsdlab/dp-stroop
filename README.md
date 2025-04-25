@@ -49,8 +49,8 @@ pip install -r requirements.txt
 
 There are two incarnations of the modified Stroop paradigm:
 
-1.  A self-paced version, requesting the user to start each trial by pressing the arrow down button.
-1.  A random inter-trial-interval
+1.  A self-paced version, requesting the user to start each trial by pressing and **holding** the arrow down button. The idea is to also record the response onset marked by the lift-off from the arrow down key. If necessary explain the participant to keep the arrow down key pressed until they made their decission and only then responde according to the instructions on the instruction screen.
+1.  A random inter-trial-interval. This will just show the fixation cross for a random time interval (defined by a max and min time - see `configs/task.yaml`).
 
 To run them, use the following:
 
@@ -60,7 +60,7 @@ To run them, use the following:
 python -m stroop_task.main --n_trials=6
 ```
 
-1. Self-paced
+2. Random inter trial interval
 
 ```bash
 python -m stroop_task.main --n_trials=6 --random_wait=True
