@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 ## Running the paradigm
 
-There are two incarnations of the paradigm:
+There are two incarnations of the modified Stroop paradigm:
 
 1.  A self-paced version, requesting the user to start each trial by pressing the arrow down button.
 1.  A random inter-trial-interval
@@ -68,6 +68,24 @@ python -m stroop_task.main --n_trials=6 --random_wait=True
 
 Note that this is reducing the number of trials to give a quick look-and-feel. The default is 60 trials.
 For a list of available CLI parameters, you can use `python -m stroop_task.main --help`
+
+### Running the classical equivalent
+
+There is also an implementation of an equivalent to the classical card based Stroop task, which can be run with:
+
+```bash
+python -m stroop_task.main --classical=True --language=german
+```
+
+This would start the classical equivalent in German language. The instruction asks the participant to read to color
+of the word out loud. And the experimenter is to track how far the participant read within a given time. It is suggested to
+print out the color tables, which are available under `./stroop_task/assets/`. Note that the files are generated on first
+call to the function. I.e., you might need to trigger a run once to see the `json` e.g. for `classical_list_nstim-60_perc_incongruent-0.33_lang-german.json`. It can also be handy to just take a screenshot of the table and print it for the experimenter to track incorrect words.
+The default timeout for the task is set to `45` seconds. But the parameter can be modulated with the `--classic_stroop_time_s` flag, e.g.:
+
+```bash
+python -m stroop_task.main --classical=True --classic_stroop_time_s=60   # for 60s timeout
+```
 
 ## Configuration
 

@@ -6,4 +6,3 @@ testpaths = [
     "./"
 ]
 filterwarnings = ["ignore:::.*fire.core"]
-

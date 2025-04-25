@@ -28,3 +28,9 @@ msgs:
 
   instruction_footer: |
     Press the space key to start.
+
+  instruction_headline_classical: |
+    Thank you for participating in this task. We ask you now to please read 
+    color words from a list and speak out loud the color the word is printed
+    in and NOT the word itself. For example, if you see the word "red" printed
+    in blue, you should say "blue".

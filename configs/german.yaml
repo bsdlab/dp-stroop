@@ -26,3 +26,10 @@ msgs:
 
   instruction_footer: |
     Drücken Sie die Leertaste, um zu beginnen.
+
+  instruction_headline_classical: |
+    Vielen Dank für Ihre Teilnahme an dieser Aufgabe. Wir bitten Sie nun,
+    Farbwörter von einer Liste zu lesen und laut die Farbe auszusprechen,
+    in der das Wort gedruckt ist, und NICHT das Wort selbst.
+    Zum Beispiel: Wenn Sie das Wort »rot« in blauer Farbe gedruckt sehen,
+    sollten Sie »blau« sagen.

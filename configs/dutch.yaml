@@ -26,3 +26,9 @@ msgs:
 
   instruction_footer: |
     Druk op de spatiebalk om te beginnen.
+
+  instruction_headline_classical: |
+    Bedankt voor uw deelname aan deze taak. We vragen u nu om kleurwoorden van
+    een lijst te lezen en hardop de kleur uit te spreken waarin het woord
+    gedrukt staat, en NIET het woord zelf. 
+    Bijvoorbeeld: als u het woord ‘rood’ in blauwe letters ziet, moet u ‘blauw’ zeggen.

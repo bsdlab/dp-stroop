@@ -1,5 +1,7 @@
+import json
 import random
 from dataclasses import _MISSING_TYPE, dataclass, field, fields
+from pathlib import Path
 
 import pyglet
 import yaml
@@ -36,6 +38,7 @@ class StroopContext:
     )
     results_show_time_s: float = 5.0  # time to show the results
     arrow_down_press_to_continue_s: float = 0.5
+    classical_timeout_s: float = 45
 
     # paradigm data
     reactions: list = field(default_factory=list)  # tracking
@@ -409,6 +412,165 @@ class StroopContext:
         logger.debug(f"block stimuli: {stimuli}")
         self.block_stimuli = stimuli
 
+    def create_classical_table_stimulus(
+        self, n_stimuli: int = 60, n_per_row: int = 6, perc_incongruent: float = 0.33
+    ):
+        file = Path(
+            f"./stroop_task/assets/classical_list_nstim-{n_stimuli}_perc_incongruent-{perc_incongruent:.2f}_lang-{self.language}.json"
+        )
+
+        coherent_stimuli = self.known_stimuli["coherent"]
+        incoherent_stimuli = self.known_stimuli["incoherent"]
+        all_stims = {**coherent_stimuli, **incoherent_stimuli}
+
+        if file.exists():
+            logger.debug(f"Loading stimuli from {file}")
+            stimuli = json.load(open(file, "r"))["sequence"]
+        else:
+            logger.debug(f"Creating classical stimuli file at: {file} - random.seed(3)")
+            random.seed(3)
+
+            # fix seed to keep creation stable
+            n_incoherent = int(n_stimuli * perc_incongruent)
+            n_coherent = n_stimuli - n_incoherent
+
+            stimuli = random.choices(
+                list(coherent_stimuli.keys()), k=n_coherent
+            ) + random.choices(list(incoherent_stimuli.keys()), k=n_incoherent)
+
+            random.shuffle(stimuli)
+
+            json.dump({"sequence": stimuli}, open(file, "w"))
+
+        # sort into rows
+        stimuli_arranged = [
+            stimuli[i : i + n_per_row] for i in range(0, len(stimuli), n_per_row)
+        ]
+
+        # batch stimuli together
+        cell_width = self.window.width / n_per_row
+        cell_height = self.window.height / len(stimuli_arranged)
+
+        batch = pyglet.graphics.Batch()
+        labels = []
+        for irow, row in enumerate(stimuli_arranged):
+            for icol, stim in enumerate(row):
+                template_stim = all_stims[stim]
+
+                # create a new one as stimuli contain c-pointers, which we cannot use deepcopy for
+                text_label = pyglet.text.Label(
+                    text=template_stim.text,
+                    color=template_stim.color,
+                    font_size=template_stim.font_size,
+                    x=(icol + 1 / 2) * cell_width,  # +1/2 to provide center
+                    y=self.window.height - (irow + 1 / 2) * cell_height,
+                    anchor_x="center",
+                    anchor_y="center",
+                    batch=batch,
+                )
+
+                # sort top left to bottom right
+                labels.append(text_label)
+
+        self.known_stimuli["classical_batch"] = batch
+        self.known_stimuli["classical_labels"] = (
+            labels  # also store the label list so that it does not get deleted
+        )
+
+    def add_instruction_screen_batch_classical(self):
+
+        instruction_batch_classical = pyglet.graphics.Batch()
+        self.known_stimuli["instruction_header_classical"] = pyglet.text.Label(
+            text=self.msgs["instruction_headline_classical"],
+            color=(255, 255, 255, 255),
+            font_size=self.instruction_font_size,
+            x=self.window.width // 2,
+            y=int(self.window.height // 10 * 9),
+            anchor_x="center",
+            anchor_y="center",
+            batch=instruction_batch_classical,
+            width=int(self.window.width * 0.9),
+            multiline=True,
+        )
+
+        self.known_stimuli["instruction_footer"] = pyglet.text.Label(
+            text=self.msgs["instruction_footer"],
+            color=(255, 255, 255, 255),
+            font_size=self.instruction_font_size,
+            x=self.window.width // 2,
+            y=int(self.window.height // 12),
+            anchor_x="center",
+            anchor_y="center",
+            batch=instruction_batch_classical,
+            width=int(self.window.width * 0.9),
+            multiline=True,
+        )
+
+        self.create_classical_examples_to_batch(instruction_batch_classical)
+
+        self.known_stimuli["instruction_batch_classical"] = instruction_batch_classical
+
+    def create_classical_examples_to_batch(self, batch):
+        """Not the full table just a few examples for the instruction screen"""
+
+        coherent_stimuli = self.known_stimuli["coherent"]
+        incoherent_stimuli = self.known_stimuli["incoherent"]
+        all_stims = {**coherent_stimuli, **incoherent_stimuli}
+
+        random.seed(1)
+
+        # fix seed to keep creation stable
+        n_incoherent = 6
+        n_coherent = 6
+
+        stimuli = random.choices(
+            list(coherent_stimuli.keys()), k=n_coherent
+        ) + random.choices(list(incoherent_stimuli.keys()), k=n_incoherent)
+
+        random.shuffle(stimuli)
+
+        n_per_row = 4
+        stimuli_arranged = [
+            stimuli[i : i + n_per_row] for i in range(0, len(stimuli), n_per_row)
+        ]
+
+        # batch stimuli together
+        cell_width = self.window.width / (n_per_row + 2)
+        cell_height = (self.window.height / 2) / len(
+            stimuli_arranged
+        )  # only fill half a screen
+
+        labels = []
+        for irow, row in enumerate(stimuli_arranged):
+            for icol, stim in enumerate(row):
+                template_stim = all_stims[stim]
+
+                # create a new one as stimuli contain c-pointers, which we cannot use deepcopy for
+                text_label = pyglet.text.Label(
+                    text=template_stim.text,
+                    color=template_stim.color,
+                    font_size=template_stim.font_size,
+                    x=(icol + 1 / 2 + 1)
+                    * cell_width,  # +1/2 to provide center , +1 cell padding left and right
+                    y=(self.window.height * 3 / 4) - (irow + 1 / 2) * cell_height,
+                    anchor_x="center",
+                    anchor_y="center",
+                    batch=batch,
+                )
+
+                # sort top left to bottom right
+                labels.append(text_label)
+
+        self.known_stimuli["classical_labels_intro"] = (
+            labels  # also store the label list so that it does not get deleted
+        )
+
+    def init_classical(self):
+        self.create_classical_table_stimulus()
+
+        # also create a classical instuction
+        self.add_instruction_screen_batch_classical()
+
     def close_context(self):
         """Close the context stopping all pyglet elements"""
         if self.has_window_attached:
@@ -445,3 +607,10 @@ if __name__ == "__main__":
 
     mw = get_marker_writer(write_to_serial=False)
     ctx = load_context(marker_writer=mw)
+
+    ctx.add_window(pyglet.window.Window(fullscreen=False, height=800, width=1200))
+    ctx.create_stimuli()
+
+    ctx.init_classical()
+
+    self = ctx
