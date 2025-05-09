@@ -24,6 +24,16 @@ msgs:
     als de kleur van het bovenste woord NIET overeenkomt
     met de tekst eronder.
 
+  congruent_reaction_text_focus: |
+    Druk op de pijl-rechts toets
+    als de tekst van het bovenste woord overeenkomt
+    met de tekst eronder.
+
+  incongruent_reaction_text_focus: |
+    Druk op de pijl-links toets
+    als de tekst van het bovenste woord NIET overeenkomt
+    met de tekst eronder.
+
   instruction_footer: |
     Druk op de spatiebalk om te beginnen.
 

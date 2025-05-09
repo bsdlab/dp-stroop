@@ -24,6 +24,16 @@ msgs:
     wenn die Farbe des oberen Wortes
     NICHT mit dem Text darunter übereinstimmt.
 
+  congruent_reaction_text_focus: |
+    Drücken Sie die Pfeil-nach-rechts-Taste,
+    wenn der Text des oberen Wortes
+    mit dem Text darunter übereinstimmt.
+
+  incongruent_reaction_text_focus: |
+    Drücken Sie die Pfeil-nach-links-Taste,
+    wenn der Text des oberen Wortes
+    NICHT mit dem Text darunter übereinstimmt.
+
   instruction_footer: |
     Drücken Sie die Leertaste, um zu beginnen.
 

@@ -144,7 +144,7 @@ def run_paradigm_cli(
     Parameters
     ----------
     n_trials : int (default: 60)
-        Number of trials to run in a block. Should be a multiple of 6 to ensure proper balancing
+        Number of trials to run in a block. Should be a multiple of 12 to ensure proper balancing
 
     language : str (default: "english")
         Language to use. Currently available:

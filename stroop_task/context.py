@@ -1,7 +1,9 @@
 import json
 import random
-from dataclasses import _MISSING_TYPE, dataclass, field, fields
+from dataclasses import dataclass, field
 from pathlib import Path
+from re import split
+from typing import Literal
 
 import pyglet
 import yaml
@@ -39,6 +41,7 @@ class StroopContext:
     results_show_time_s: float = 5.0  # time to show the results
     arrow_down_press_to_continue_s: float = 0.5
     classical_timeout_s: float = 45
+    focus: Literal["text", "color"] = "color"
 
     # paradigm data
     reactions: list = field(default_factory=list)  # tracking
@@ -57,9 +60,6 @@ class StroopContext:
 
     # time keeping
     tic: float = 0
-    focus: str = (
-        "text"  # can be `text` or `color` (font color), determines which would be considered as correct
-    )
 
     marker_writer: MarkerWriter = field(default_factory=get_marker_writer)
     has_window_attached: bool = False
@@ -217,7 +217,11 @@ class StroopContext:
             congruent_image_x = int((self.window.width // 7) * 5)
 
             self.known_stimuli["instruction_incongruent"] = pyglet.text.Label(
-                text=self.msgs["incongruent_reaction_color_focus"],
+                text=(
+                    self.msgs["incongruent_reaction_color_focus"]
+                    if self.focus == "color"
+                    else self.msgs["incongruent_reaction_text_focus"]
+                ),
                 color=(255, 255, 255, 255),
                 font_size=self.instruction_font_size,
                 x=incongruent_image_x,
@@ -230,7 +234,11 @@ class StroopContext:
             )
 
             self.known_stimuli["instruction_congruent"] = pyglet.text.Label(
-                text=self.msgs["congruent_reaction_color_focus"],
+                text=(
+                    self.msgs["congruent_reaction_color_focus"]
+                    if self.focus == "color"
+                    else self.msgs["congruent_reaction_text_focus"]
+                ),
                 color=(255, 255, 255, 255),
                 font_size=self.instruction_font_size,
                 x=congruent_image_x,
@@ -276,49 +284,110 @@ class StroopContext:
         # examples of congruent and incongruent
         coh_key = list(self.known_stimuli["coherent"].keys())[0]
         incoh_key = list(self.known_stimuli["incoherent"].keys())[0]
-        self.known_stimuli["instruction_example_congruent_top"] = pyglet.text.Label(
-            text=self.known_stimuli["coherent"][coh_key].text,
-            color=self.known_stimuli["coherent"][coh_key].color,
-            font_size=int(self.instruction_font_size * 1.2),
-            x=congruent_image_x + self.window.width // 14,
-            y=(self.window.height // 16 * 9),
-            anchor_x="center",
-            anchor_y="center",
-            batch=instruction_batch,
-        )
 
-        self.known_stimuli["instruction_example_congruent_bot"] = pyglet.text.Label(
-            text=self.known_stimuli["white"][coh_key].text,
-            color=self.known_stimuli["white"][coh_key].color,
-            font_size=int(self.instruction_font_size * 1.2),
-            x=congruent_image_x + self.window.width // 14,
-            y=(self.window.height // 16 * 8),
-            anchor_x="center",
-            anchor_y="center",
-            batch=instruction_batch,
-        )
+        # if text focus - take incongruent but matching word for correct
+        if self.focus == "color":
+            self.known_stimuli["instruction_example_congruent_top"] = pyglet.text.Label(
+                text=self.known_stimuli["coherent"][coh_key].text,
+                color=self.known_stimuli["coherent"][coh_key].color,
+                font_size=int(self.instruction_font_size * 1.2),
+                x=congruent_image_x + self.window.width // 14,
+                y=(self.window.height // 16 * 9),
+                anchor_x="center",
+                anchor_y="center",
+                batch=instruction_batch,
+            )
 
-        self.known_stimuli["instruction_example_incogruent_top"] = pyglet.text.Label(
-            text=self.known_stimuli["incoherent"][incoh_key].text,
-            color=self.known_stimuli["incoherent"][incoh_key].color,
-            font_size=int(self.instruction_font_size * 1.2),
-            x=incongruent_image_x + self.window.width // 14,
-            y=(self.window.height // 16 * 9),
-            anchor_x="center",
-            anchor_y="center",
-            batch=instruction_batch,
-        )
+            self.known_stimuli["instruction_example_congruent_bot"] = pyglet.text.Label(
+                text=self.known_stimuli["white"][coh_key].text,
+                color=self.known_stimuli["white"][coh_key].color,
+                font_size=int(self.instruction_font_size * 1.2),
+                x=congruent_image_x + self.window.width // 14,
+                y=(self.window.height // 16 * 8),
+                anchor_x="center",
+                anchor_y="center",
+                batch=instruction_batch,
+            )
 
-        self.known_stimuli["instruction_example_incongruent_bot"] = pyglet.text.Label(
-            text=self.known_stimuli["white"][coh_key].text,
-            color=self.known_stimuli["white"][coh_key].color,
-            font_size=int(self.instruction_font_size * 1.2),
-            x=incongruent_image_x + self.window.width // 14,
-            y=(self.window.height // 16 * 8),
-            anchor_x="center",
-            anchor_y="center",
-            batch=instruction_batch,
-        )
+            self.known_stimuli["instruction_example_incogruent_top"] = (
+                pyglet.text.Label(
+                    text=self.known_stimuli["incoherent"][incoh_key].text,
+                    color=self.known_stimuli["incoherent"][incoh_key].color,
+                    font_size=int(self.instruction_font_size * 1.2),
+                    x=incongruent_image_x + self.window.width // 14,
+                    y=(self.window.height // 16 * 9),
+                    anchor_x="center",
+                    anchor_y="center",
+                    batch=instruction_batch,
+                )
+            )
+
+            self.known_stimuli["instruction_example_incongruent_bot"] = (
+                pyglet.text.Label(
+                    text=self.known_stimuli["white"][coh_key].text,
+                    color=self.known_stimuli["white"][coh_key].color,
+                    font_size=int(self.instruction_font_size * 1.2),
+                    x=incongruent_image_x + self.window.width // 14,
+                    y=(self.window.height // 16 * 8),
+                    anchor_x="center",
+                    anchor_y="center",
+                    batch=instruction_batch,
+                )
+            )
+
+        if self.focus == "text":
+            self.known_stimuli["instruction_example_congruent_top"] = pyglet.text.Label(
+                text=self.known_stimuli["incoherent"][incoh_key].text,
+                color=self.known_stimuli["incoherent"][incoh_key].color,
+                font_size=int(self.instruction_font_size * 1.2),
+                x=congruent_image_x + self.window.width // 14,
+                y=(self.window.height // 16 * 9),
+                anchor_x="center",
+                anchor_y="center",
+                batch=instruction_batch,
+            )
+
+            self.known_stimuli["instruction_example_congruent_bot"] = pyglet.text.Label(
+                text=self.known_stimuli["white"][incoh_key.split("_")[0]].text,
+                color=self.known_stimuli["white"][incoh_key.split("_")[0]].color,
+                font_size=int(self.instruction_font_size * 1.2),
+                x=congruent_image_x + self.window.width // 14,
+                y=(self.window.height // 16 * 8),
+                anchor_x="center",
+                anchor_y="center",
+                batch=instruction_batch,
+            )
+
+            self.known_stimuli["instruction_example_incogruent_top"] = (
+                pyglet.text.Label(
+                    text=self.known_stimuli["coherent"][coh_key].text,
+                    font_size=int(self.instruction_font_size * 1.2),
+                    color=self.known_stimuli["coherent"][coh_key].color,
+                    x=incongruent_image_x + self.window.width // 14,
+                    y=(self.window.height // 16 * 9),
+                    anchor_x="center",
+                    anchor_y="center",
+                    batch=instruction_batch,
+                )
+            )
+
+            # just get a word that does not match
+            other_word = [
+                w for w in self.known_stimuli["white"].keys() if w != coh_key
+            ][0]
+
+            self.known_stimuli["instruction_example_incongruent_bot"] = (
+                pyglet.text.Label(
+                    text=self.known_stimuli["white"][other_word].text,
+                    color=self.known_stimuli["white"][other_word].color,
+                    font_size=int(self.instruction_font_size * 1.2),
+                    x=incongruent_image_x + self.window.width // 14,
+                    y=(self.window.height // 16 * 8),
+                    anchor_x="center",
+                    anchor_y="center",
+                    batch=instruction_batch,
+                )
+            )
 
         # --- add the example images
         self.known_stimuli["instruction_finger_left_img"] = pyglet.sprite.Sprite(
@@ -364,48 +433,65 @@ class StroopContext:
         # 1/1/1 for congruent, incongruent, neutral
         # with lower word correct in 50% of the time
 
-        assert n_trials % 6 == 0, (
-            f"Please select {n_trials=} to be a multiple of 6 to allow for proper"
-            " distrubution of congruent, incongruent, and neutral stimuli"
-        )
+        if n_trials % 6 != 0:
+            raise ValueError(
+                f"Please select {n_trials=} to be a multiple of 6 to allow for proper"
+                " distribution of congruent, incongruent, and neutral stimuli, with correct/incorrect word in the second row"
+            )
 
         coherent_stimuli = self.known_stimuli["coherent"]
         incoherent_stimuli = self.known_stimuli["incoherent"]
         neutral_stimuli = self.known_stimuli["neutral"]
         white_stimuli = self.known_stimuli["white"]
 
-        # create random sample by truncation
-        top_stims = []
-        for stim_dict in [coherent_stimuli, incoherent_stimuli, neutral_stimuli]:
-            top_stims.extend(
-                [
-                    (
-                        (cw + "_XXXX", stim_dict[cw])
-                        if stim_dict == neutral_stimuli
-                        else (cw, stim_dict[cw])
-                    )
-                    for cw, stim in stim_dict.items()
-                    for _ in range(
-                        n_trials // 3
-                    )  # need to check for the incongruent case
-                ][: n_trials // 3]
-            )
-
-        # Add bottom stims
-        match_vect = [0, 1] * (n_trials // 2)
-        random.shuffle(match_vect)
+        # create random sample for the top row - note: do not truncate, as otherwise potentially only red_... would be present
 
         stimuli = []
-        for (cw_top, stim_top), match in zip(top_stims, match_vect):
-            cwt = cw_top.split("_")[0]  # need to check for the incongruent case
-            if match == 1:
-                cw_bot = cwt
-            else:
-                cw_bot = random.choice(
-                    [cw for cw in white_stimuli.keys() if cw != cw_top]
-                )
+        n_each = n_trials // 3
+        random.seed(
+            1
+        )  # work with a fixed seed to reproduce and have same stimuli for all
+        for stim_dict in [coherent_stimuli, incoherent_stimuli, neutral_stimuli]:
 
-            stimuli.append((cw_top, stim_top, cw_bot, white_stimuli[cw_bot]))
+            if stim_dict == coherent_stimuli:
+                stim_aux = [
+                    (cw + "_" + cw, stim_dict[cw])
+                    for cw, _ in stim_dict.items()
+                    for _ in range(n_each)
+                ]
+            elif stim_dict == neutral_stimuli:
+                stim_aux = [
+                    (("XXXX_" + cw, stim_dict[cw]))
+                    for cw, _ in stim_dict.items()
+                    for _ in range(n_each)
+                ]
+
+            else:  # incoherent
+                stim_aux = [
+                    (cw, stim_dict[cw])
+                    for cw, _ in stim_dict.items()
+                    for _ in range(n_each)
+                ]
+
+            pick_idx = random.sample(range(len(stim_aux)), n_each)
+            top_stims = [stim_aux[i] for i in pick_idx]
+
+            match_vect = [0, 1] * (n_each // 2)
+            random.shuffle(match_vect)
+
+            tstim = []
+            for (cw_top, stim_top), match in zip(top_stims, match_vect):
+                cwt = cw_top.split("_")[1]
+
+                if match == 1:
+                    cw_bot = cwt
+
+                else:
+                    cw_bot = random.choice(
+                        [cw for cw in white_stimuli.keys() if cw != cwt]
+                    )
+
+                stimuli.append((cw_top, stim_top, cw_bot, white_stimuli[cw_bot]))
 
         random.shuffle(stimuli)
 

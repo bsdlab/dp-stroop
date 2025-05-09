@@ -26,6 +26,16 @@ msgs:
     key if the color of top word does NOT match
     the text below.
 
+  congruent_reaction_text_focus: |
+    Press the arrow right
+    key if the text of top word matches
+    the text below.
+
+  incongruent_reaction_text_focus: |
+    Press the arrow left
+    key if the text of top word does NOT match
+    the text below.
+
   instruction_footer: |
     Press the space key to start.
 

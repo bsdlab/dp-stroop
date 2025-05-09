@@ -1,3 +1,5 @@
+import pyglet
+import pytest
 import yaml
 
 from stroop_task.context import load_context
@@ -34,3 +36,45 @@ def test_ctx_overwrite():
     )
 
     assert ctx.endblock_mrk == 123
+
+
+def test_ctx_stimuli_balance():
+    kw = {"write_to_serial": False, "write_to_logger": True, "write_to_lsl": False}
+    mw = get_marker_writer(**kw)
+
+    ctx = load_context(marker_writer=mw)
+    ctx.add_window(pyglet.window.Window(fullscreen=False, height=800, width=1200))
+
+    ctx.create_stimuli()
+
+    assert ctx.block_stimuli == []
+
+    # needs to be multiple of 12 for proper balancing!
+    with pytest.raises(ValueError):
+        ctx.init_block_stimuli(n_trials=13)
+
+    ctx.init_block_stimuli(n_trials=6)
+
+    coh = [
+        tpl for tpl in ctx.block_stimuli if tpl[0].split("_")[0] == tpl[0].split("_")[1]
+    ]
+    icoh = [
+        tpl
+        for tpl in ctx.block_stimuli
+        if tpl[0].split("_")[0] != tpl[0].split("_")[1] and "XXXX" not in tpl[0]
+    ]
+    neut = [tpl for tpl in ctx.block_stimuli if "XXXX" in tpl[0]]
+
+    assert len(coh) == len(icoh) == len(neut)
+
+    coh_correct = [tpl for tpl in coh if tpl[0].split("_")[1] == tpl[2]]
+    icoh_correct = [tpl for tpl in icoh if tpl[0].split("_")[1] == tpl[2]]
+    neut_correct = [tpl for tpl in neut if tpl[0].split("_")[1] == tpl[2]]
+
+    coh_incorrect = [tpl for tpl in coh if tpl[0].split("_")[1] != tpl[2]]
+    icoh_incorrect = [tpl for tpl in icoh if tpl[0].split("_")[1] != tpl[2]]
+    neut_incorrect = [tpl for tpl in neut if tpl[0].split("_")[1] != tpl[2]]
+
+    assert len(coh_correct) == len(coh_incorrect)
+    assert len(icoh_correct) == len(icoh_incorrect)
+    assert len(neut_correct) == len(neut_incorrect)

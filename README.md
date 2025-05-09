@@ -69,6 +69,9 @@ python -m stroop_task.main --n_trials=6 --random_wait=True
 Note that this is reducing the number of trials to give a quick look-and-feel. The default is 60 trials.
 For a list of available CLI parameters, you can use `python -m stroop_task.main --help`
 
+Additionally, a `--focus` flag allows to switch between a `--focus=color` (default) and `--focus==text` version which
+is then displaying different instructions on the instruction screen accordingly.
+
 ### Running the classical equivalent
 
 There is also an implementation of an equivalent to the classical card based Stroop task, which can be run with:
@@ -86,6 +89,8 @@ The default timeout for the task is set to `45` seconds. But the parameter can b
 ```bash
 python -m stroop_task.main --classical=True --classic_stroop_time_s=60   # for 60s timeout
 ```
+
+**Note**: Regardless of the version of the paradigm, it is always good to run a small familiarization with each participant. This can be done by running the paradigm with a smaller trial number first, e.g., `n_trials=6` before the actual version with a proper amount of repetitions is run.
 
 ## Configuration
 

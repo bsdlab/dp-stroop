@@ -1,3 +1,4 @@
+import random
 import time
 from functools import partial
 
@@ -108,7 +109,17 @@ class StroopTaskStateManager:
             ]
 
             # Move increment to end as otherwise stimulus at idx==0 is not shown
-            correct_direction = "right" if cw_top == cw_bot else "left"
+            if self.ctx.focus == "color":
+                correct_direction = (
+                    "right" if cw_top.split("_")[1] == cw_bot else "left"
+                )
+            elif self.ctx.focus == "text":
+                correct_direction = (
+                    "right" if cw_top.split("_")[0] == cw_bot else "left"
+                )
+            else:
+                raise ValueError(f"Unknown {self.ctx.focus=}")
+
             logger.info(
                 f"Showing stimulus {cw_top=}, {cw_bot=} (in white) - {correct_direction=}"
             )
@@ -189,7 +200,7 @@ class StroopTaskStateManager:
             y=self.ctx.window.height // 2,
             anchor_x="center",
             anchor_y="center",
-            width=self.ctx.window.width * 0.8,
+            width=self.ctx.window.width * 0.8,  # type: ignore
             multiline=True,
         )
 
