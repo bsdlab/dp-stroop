@@ -4,8 +4,8 @@ from functools import partial
 
 import pyglet
 
-from stroop_task.context import StroopContext, load_context
-from stroop_task.utils.logging import add_file_handler, logger
+from stroop_task.context import StroopContext
+from stroop_task.utils.logging import logger
 
 
 class StroopTaskStateManager:

@@ -23,7 +23,7 @@ from stroop_task.utils.logging import add_file_handler, logger
 from stroop_task.utils.marker import get_marker_writer
 
 # Test this option
-pyglet.options["win32_gdi_font"] = True
+# pyglet.options["win32_gdi_font"] = True
 
 
 def run_paradigm(
