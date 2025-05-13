@@ -337,6 +337,7 @@ def on_key_press_down(
     if symbol == pyglet.window.key.DOWN and not smgr.down_pressed:
         # start tracking
         smgr.down_pressed = True
+        ctx.tic_down = time.perf_counter()
         logger.info("Arrow down pressed")
         pyglet.clock.unschedule(
             smgr.next_state
@@ -358,7 +359,12 @@ def on_key_release_log_onset(
     match symbol:
         case pyglet.window.key.DOWN:
             smgr.down_pressed = False
-            logger.info("Arrow down released")
+            tnow = time.perf_counter()
+            dt_s = tnow - ctx.tic_down
+            dtstim_s = tnow - ctx.tic
+            logger.info(
+                f"Arrow down released after {dt_s=}, compared to stim onset {dtstim_s=}"
+            )
             ctx.marker_writer.write(
                 ctx.lift_off_mrk, lsl_marker="reaction onset by down key lift off"
             )

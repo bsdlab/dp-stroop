@@ -60,6 +60,7 @@ class StroopContext:
 
     # time keeping
     tic: float = 0
+    tic_down: float = 0
 
     marker_writer: MarkerWriter = field(default_factory=get_marker_writer)
     has_window_attached: bool = False
