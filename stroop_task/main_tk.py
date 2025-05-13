@@ -1,14 +1,11 @@
-# TK inter implementation of the Stroop task
-
+# Needs to be Initialized once here as otherwise the init of the TkStroopContext is breaking
+import tkinter as tk
 from pathlib import Path
 
 import yaml
 from fire import Fire
 
-from stroop_task.context import load_tk_context
-from stroop_task.tk_task_manager import TkStroopTaskStateManager
-from stroop_task.utils.logging import add_file_handler, logger
-from stroop_task.utils.marker import get_marker_writer
+win = tk.Tk()
 
 
 def run_paradigm(
@@ -19,6 +16,12 @@ def run_paradigm(
     write_to_serial: bool = True,  # allow overwriting this from cli for simple testing
     random_wait: bool = False,
 ):
+
+    from stroop_task.context_tk import load_tk_context
+    from stroop_task.tk_task_manager import TkStroopTaskStateManager
+    from stroop_task.utils.logging import add_file_handler, logger
+    from stroop_task.utils.marker import get_marker_writer
+
     log_cfg = yaml.safe_load(open("./configs/logging.yaml"))
     log_path = Path(log_cfg["log_file"])
     log_path.parent.mkdir(exist_ok=True, parents=True)
@@ -29,7 +32,7 @@ def run_paradigm(
         logger.setLevel(logger_level)
 
     mw = get_marker_writer(write_to_serial=write_to_serial)
-    ctx = load_tk_context(language=language, focus=focus, marker_writer=mw)
+    ctx = load_tk_context(language=language, focus=focus, marker_writer=mw, window=win)
 
     # ------------------------------------------------------------------------
     # Add window to context
@@ -53,7 +56,7 @@ def run_paradigm(
 def run_paradigm_cli(
     n_trials: int = 6,
     language: str = "english",
-    logger_level: str | None = None,
+    logger_level: str | None = "DEBUG",
     focus: str = "color",
     write_to_serial: bool = False,  # allow overwriting this from cli for simple testing (which is what we usually have from serial)
     random_wait: bool = False,
