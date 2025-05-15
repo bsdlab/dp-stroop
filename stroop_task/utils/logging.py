@@ -9,5 +9,6 @@ logger = get_logger("stroop_task", add_console_handler=True)
 def add_file_handler(file_path: Path = "stroop_task.log"):
     # add a local file handler
     fh = logging.FileHandler(file_path)
-    fh.formatter = logger.handlers[1].formatter
+    fh.formatter = logger.handlers[0].formatter
+
     logger.addHandler(fh)

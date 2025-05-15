@@ -66,10 +66,12 @@ class StroopTaskStateManager:
         next_state = self.states[next_i]
         logger.debug(f"Transitioning from `{self.current_state}` to " f"`{next_state}`")
         self.current_state = next_state
-        self.transition_map[next_state]()
 
         if next_state.startswith("fixation"):
             self.ctx.marker_writer.write(self.ctx.endtrial_mrk, lsl_marker="end_trial")
+
+        self.transition_map[next_state]()
+
 
     def show_fixation(self):
         self.ctx.marker_writer.write(self.ctx.starttrial_mrk, lsl_marker="start_trial")
@@ -266,10 +268,16 @@ def on_escape_exit_handler(symbol, modifiers, ctx: StroopContext):
             ctx.close_context()
 
 
-def on_draw(ctx: StroopContext):
+def on_draw(ctx: StroopContext, fps_display: pyglet.window.FPSDisplay|None = None):
     ctx.window.clear()
+    logger.debug("cleared drawing")
     for stim in ctx.current_stimuli:
         stim.draw()
+
+    if fps_display:
+        fps_display.draw()
+
+
 
 
 def on_key_press_handler(
@@ -345,6 +353,9 @@ def handle_reaction(key: str, ctx: StroopContext, smgr: StroopTaskStateManager):
     ctx.reactions.append((key, rtime_s))
     ctx.marker_writer.write(ctx.reaction_mrk, lsl_marker=f"reaction_{key}|{rtime_s=}")
     logger.info(f"Reaction time: {rtime_s=}")
+
+    # if rtime_s > 2.1:
+    #     breakpoint()
 
     # Remove the scheduled timeout callback because we trigger the next state directly
     pyglet.clock.unschedule(smgr.register_timeout)
