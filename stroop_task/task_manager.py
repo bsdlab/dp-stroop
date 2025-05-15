@@ -162,8 +162,8 @@ class StroopTaskStateManager:
         logger.info(f"Reaction_times={self.ctx.reactions}")
 
         # disable other reaction handlers as we reached the end
-        while len(ctx.window._event_stack) > 1:
-            ctx.window.pop_handlers()
+        while len(self.ctx.window._event_stack) > 1:
+            self.ctx.window.pop_handlers()
 
         mean_reaction_time = sum([e[1] for e in self.ctx.reactions]) / len(
             self.ctx.reactions
