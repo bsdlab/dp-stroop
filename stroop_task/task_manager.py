@@ -82,18 +82,6 @@ class StroopTaskStateManager:
         self.ctx.marker_writer.write(self.ctx.starttrial_mrk, lsl_marker="start_trial")
         self.ctx.current_stimuli = [self.ctx.known_stimuli["fixation"]]
 
-        self.ctx.window.push_handlers(
-            on_key_press=partial(
-                on_key_press_down,  # this will trigger the transition if ready
-                ctx=self.ctx,
-                smgr=self,
-            ),
-            on_key_release=partial(
-                on_key_release_down,
-                smgr=self,
-            ),
-        )
-
     def show_stimulus(self):
         """Show the next stimulus in the self.ctx.block_stimuli list"""
 
@@ -122,21 +110,6 @@ class StroopTaskStateManager:
 
             logger.info(
                 f"Showing stimulus {cw_top=}, {cw_bot=} (in white) - {correct_direction=}"
-            )
-
-            # pop all other handlers but the first layer (containing the on_draw and exit)
-            while len(self.ctx.window._event_stack) > 1:
-                self.ctx.window.pop_handlers()
-
-            self.ctx.window.push_handlers(
-                on_key_press=partial(
-                    on_key_press_stroop_reaction_handler,
-                    ctx=self.ctx,
-                    smgr=self,
-                ),
-                on_key_release=partial(
-                    on_key_release_log_onset, ctx=self.ctx, smgr=self
-                ),
             )
 
             mrk = (
@@ -187,6 +160,11 @@ class StroopTaskStateManager:
 
     def show_mean_reaction_time(self):
         logger.info(f"Reaction_times={self.ctx.reactions}")
+
+        # disable other reaction handlers as we reached the end
+        while len(ctx.window._event_stack) > 1:
+            ctx.window.pop_handlers()
+
         mean_reaction_time = sum([e[1] for e in self.ctx.reactions]) / len(
             self.ctx.reactions
         )
@@ -279,6 +257,13 @@ class StroopClassicTaskStateManager:
 # ----------------------------------------------------------------------------
 #                      Handlers
 # ----------------------------------------------------------------------------
+def on_escape_exit_handler(symbol, modifiers, ctx: StroopContext):
+    """Handle key presses and pop the latest handlers on response"""
+
+    match symbol:
+        case pyglet.window.key.ESCAPE:
+            logger.debug(f"Escape key pressed")
+            ctx.close_context()
 
 
 def on_draw(ctx: StroopContext):
@@ -287,27 +272,68 @@ def on_draw(ctx: StroopContext):
         stim.draw()
 
 
-def on_escape_exit_handler(symbol, modifiers, ctx: StroopContext):
-    """The basic escape handler"""
-    match symbol:
-        case pyglet.window.key.ESCAPE:
-            ctx.close_context()
-
-
-def on_key_press_stroop_reaction_handler(
+def on_key_press_handler(
     symbol, modifiers, ctx: StroopContext, smgr: StroopTaskStateManager
 ):
     """Handle key presses and pop the latest handlers on response"""
-    match symbol:
-        case pyglet.window.key.RIGHT:
-            # Potential logging and LSL here
-            logger.info("RIGHT pressed")
-            handle_reaction("RIGHT", ctx, smgr)
-            # breaking of by skipping scheduled manager evctx
-        case pyglet.window.key.LEFT:
-            # Potential logging and LSL here
-            logger.info("LEFT pressed")
-            handle_reaction("LEFT", ctx, smgr)
+
+    match smgr.current_state:
+        case "fixation_until_arrow_down":
+
+            if symbol == pyglet.window.key.DOWN and not smgr.down_pressed:
+                # start tracking
+                smgr.down_pressed = True
+                ctx.tic_down = time.perf_counter()
+                logger.info("Arrow down pressed")
+                pyglet.clock.unschedule(
+                    smgr.next_state
+                )  # ensure that only one transition is every triggered
+                pyglet.clock.schedule_once(
+                    smgr.next_state, ctx.arrow_down_press_to_continue_s
+                )
+
+        # only react to left right if the stimulus is presented
+        case "stimulus":
+            match symbol:
+                case pyglet.window.key.RIGHT:
+                    # Potential logging and LSL here
+                    logger.info("RIGHT pressed")
+                    handle_reaction("RIGHT", ctx, smgr)
+                    # breaking of by skipping scheduled manager evctx
+                case pyglet.window.key.LEFT:
+                    # Potential logging and LSL here
+                    logger.info("LEFT pressed")
+                    handle_reaction("LEFT", ctx, smgr)
+
+
+def on_key_release_handler(
+    symbol, modifiers, ctx: StroopContext, smgr: StroopTaskStateManager
+):
+    """Handle key presses and pop the latest handlers on response"""
+
+    match smgr.current_state:
+        case "fixation_until_arrow_down":
+            match symbol:
+                case pyglet.window.key.DOWN:
+                    # if this happens reset the timer --> so stop the transition
+                    smgr.down_pressed = False
+                    pyglet.clock.unschedule(smgr.next_state)
+
+        # only react to left right if the stimulus is presented
+        case "stimulus":
+            match symbol:
+                case pyglet.window.key.DOWN:
+                    smgr.down_pressed = False
+                    tnow = time.perf_counter()
+                    dt_s = tnow - ctx.tic_down
+                    dtstim_s = tnow - ctx.tic
+                    logger.info(
+                        f"Arrow down released after {dt_s=}, compared to stim onset {dtstim_s=}"
+                    )
+                    ctx.marker_writer.write(
+                        ctx.lift_off_mrk,
+                        lsl_marker="reaction onset by down key lift off",
+                    )
 
 
 def handle_reaction(key: str, ctx: StroopContext, smgr: StroopTaskStateManager):
@@ -320,54 +346,9 @@ def handle_reaction(key: str, ctx: StroopContext, smgr: StroopTaskStateManager):
     ctx.marker_writer.write(ctx.reaction_mrk, lsl_marker=f"reaction_{key}|{rtime_s=}")
     logger.info(f"Reaction time: {rtime_s=}")
 
-    # never pop last layer
-    while len(ctx.window._event_stack) > 1:
-        ctx.window.pop_handlers()
-
     # Remove the scheduled timeout callback because we trigger the next state directly
     pyglet.clock.unschedule(smgr.register_timeout)
-
-    # trigger next state
     smgr.next_state()
-
-
-def on_key_press_down(
-    symbol, modifier, ctx: StroopContext, smgr: StroopTaskStateManager
-):
-    if symbol == pyglet.window.key.DOWN and not smgr.down_pressed:
-        # start tracking
-        smgr.down_pressed = True
-        ctx.tic_down = time.perf_counter()
-        logger.info("Arrow down pressed")
-        pyglet.clock.unschedule(
-            smgr.next_state
-        )  # ensure that only one transition is every triggered
-        pyglet.clock.schedule_once(smgr.next_state, ctx.arrow_down_press_to_continue_s)
-
-
-def on_key_release_down(symbol, modifier, smgr: StroopTaskStateManager):
-    match symbol:
-        case pyglet.window.key.DOWN:
-            # if this happens reset the timer --> so stop the transition
-            smgr.down_pressed = False
-            pyglet.clock.unschedule(smgr.next_state)
-
-
-def on_key_release_log_onset(
-    symbol, modifiers, ctx: StroopContext, smgr: StroopTaskStateManager
-):
-    match symbol:
-        case pyglet.window.key.DOWN:
-            smgr.down_pressed = False
-            tnow = time.perf_counter()
-            dt_s = tnow - ctx.tic_down
-            dtstim_s = tnow - ctx.tic
-            logger.info(
-                f"Arrow down released after {dt_s=}, compared to stim onset {dtstim_s=}"
-            )
-            ctx.marker_writer.write(
-                ctx.lift_off_mrk, lsl_marker="reaction onset by down key lift off"
-            )
 
 
 def instruction_skip_handler(
@@ -381,7 +362,17 @@ def instruction_skip_handler(
             while len(ctx.window._event_stack) > 1:
                 ctx.window.pop_handlers()
 
-            pyglet.clock.unschedule(smgr.show_fixation)
+            # attach the regulart key press handlers
+            ctx.window.push_handlers(
+                on_key_press=partial(
+                    on_key_press_handler,
+                    ctx=ctx,
+                    smgr=smgr,
+                ),
+                on_key_release=partial(on_key_release_handler, ctx=ctx, smgr=smgr),
+            )
+
+            # --> show the fixation
             smgr.transition_map[smgr.current_state]()
 
 
