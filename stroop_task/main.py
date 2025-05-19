@@ -33,7 +33,7 @@ def run_paradigm(
     focus: str = "color",
     write_to_serial: bool = True,  # allow overwriting this from cli for simple testing
     random_wait: bool = False,
-    show_fps: bool = False
+    show_fps: bool = False,
 ):
 
     log_cfg = yaml.safe_load(open("./configs/logging.yaml"))
@@ -47,17 +47,25 @@ def run_paradigm(
 
     mw = get_marker_writer(write_to_serial=write_to_serial)
     ctx = load_context(language=language, focus=focus, marker_writer=mw)
-    
+
     config = pyglet.gl.Config(double_buffer=True, depth_size=16)
     ctx.add_window(
         pyglet.window.Window(
-            fullscreen=ctx.fullscreen, height=ctx.screen_height, width=ctx.screen_width, vsync=True, config=config
+            fullscreen=ctx.fullscreen,
+            height=ctx.screen_height,
+            width=ctx.screen_width,
+            vsync=False,
+            config=config,
         )
     )
 
     smgr = StroopTaskStateManager(ctx=ctx, random_wait=random_wait)
 
-    fps_display = pyglet.window.FPSDisplay(window=ctx.window, color=(255,255,255,255)) if show_fps else None
+    fps_display = (
+        pyglet.window.FPSDisplay(window=ctx.window, color=(255, 255, 255, 255))
+        if show_fps
+        else None
+    )
 
     # Hook up the drawing callback
     ctx.window.push_handlers(
@@ -75,7 +83,7 @@ def run_paradigm(
     )  # start after 0.5 sec
 
     try:
-        pyglet.app.run()
+        pyglet.app.run(interval=0.008)
     finally:
         ctx.close_context()
 
@@ -87,6 +95,7 @@ def run_paradigm_classical(
     write_to_serial: bool = True,  # allow overwriting this from cli for simple testing
     random_wait: bool = False,
     classical_timeout_s: Optional[float] = None,
+    show_fps: bool = False,
 ):
     """
     The arrangement and colors where drawn randomly once, but are then fixed
@@ -108,14 +117,22 @@ def run_paradigm_classical(
     config = pyglet.gl.Config(double_buffer=True, depth_size=16)
     ctx.add_window(
         pyglet.window.Window(
-            fullscreen=ctx.fullscreen, height=ctx.screen_height, width=ctx.screen_width, vsync=True, config=config
+            fullscreen=ctx.fullscreen,
+            height=ctx.screen_height,
+            width=ctx.screen_width,
+            vsync=False,
+            config=config,
         )
     )
     if classical_timeout_s:
         ctx.classical_timeout_s = classical_timeout_s
     smgr = StroopClassicTaskStateManager(ctx=ctx, random_wait=random_wait)
 
-    fps_display = pyglet.window.FPSDisplay(window=ctx.window, color=(255,255,255,255)) if show_fps else None
+    fps_display = (
+        pyglet.window.FPSDisplay(window=ctx.window, color=(255, 255, 255, 255))
+        if show_fps
+        else None
+    )
 
     # Hook up the drawing callback
     ctx.window.push_handlers(
@@ -133,7 +150,7 @@ def run_paradigm_classical(
     )  # start after 0.5 sec
 
     try:
-        pyglet.app.run()
+        pyglet.app.run(interval=0.008)
     finally:
         ctx.close_context()
 
@@ -147,7 +164,7 @@ def run_paradigm_cli(
     random_wait: bool = False,
     classical: bool = False,
     classic_stroop_time_s: float = 45,
-    show_fps: bool = False
+    show_fps: bool = False,
 ):
     """Starting the Stroop paradigm standalone in a pyglet window
 
@@ -188,6 +205,9 @@ def run_paradigm_cli(
     classic_stroop_time_s : float (default: 45)
         Time in seconds for the classical stroop task. Used if `classical` is True.
 
+    show_fps: bool
+        If True, the FPS will be shown on the screen.
+
     """
 
     if classical:
@@ -198,7 +218,7 @@ def run_paradigm_cli(
             write_to_serial=write_to_serial,
             random_wait=random_wait,
             classical_timeout_s=classic_stroop_time_s,
-            show_fps=show_fps
+            show_fps=show_fps,
         )
 
     else:
@@ -209,7 +229,7 @@ def run_paradigm_cli(
             focus=focus,
             write_to_serial=write_to_serial,
             random_wait=random_wait,
-            show_fps=show_fps
+            show_fps=show_fps,
         )
 
 
@@ -221,4 +241,5 @@ def run_block_subprocess(**kwargs):
 
 
 if __name__ == "__main__":
+    logger.pop()  # popping off the UJsonLogger from dareplane_utils
     Fire(run_paradigm_cli)
