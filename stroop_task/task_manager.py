@@ -72,7 +72,6 @@ class StroopTaskStateManager:
 
         self.transition_map[next_state]()
 
-
     def show_fixation(self):
         self.ctx.marker_writer.write(self.ctx.starttrial_mrk, lsl_marker="start_trial")
         self.ctx.current_stimuli = [self.ctx.known_stimuli["fixation"]]
@@ -264,11 +263,12 @@ def on_escape_exit_handler(symbol, modifiers, ctx: StroopContext):
 
     match symbol:
         case pyglet.window.key.ESCAPE:
-            logger.debug(f"Escape key pressed")
+            logger.debug("Escape key pressed")
             ctx.close_context()
+            return True
 
 
-def on_draw(ctx: StroopContext, fps_display: pyglet.window.FPSDisplay|None = None):
+def on_draw(ctx: StroopContext, fps_display: pyglet.window.FPSDisplay | None = None):
     ctx.window.clear()
     logger.debug("cleared drawing")
     for stim in ctx.current_stimuli:
@@ -276,8 +276,6 @@ def on_draw(ctx: StroopContext, fps_display: pyglet.window.FPSDisplay|None = Non
 
     if fps_display:
         fps_display.draw()
-
-
 
 
 def on_key_press_handler(
@@ -299,6 +297,7 @@ def on_key_press_handler(
                 pyglet.clock.schedule_once(
                     smgr.next_state, ctx.arrow_down_press_to_continue_s
                 )
+                return True
 
         # only react to left right if the stimulus is presented
         case "stimulus":
@@ -307,11 +306,13 @@ def on_key_press_handler(
                     # Potential logging and LSL here
                     logger.info("RIGHT pressed")
                     handle_reaction("RIGHT", ctx, smgr)
+                    return True
                     # breaking of by skipping scheduled manager evctx
                 case pyglet.window.key.LEFT:
                     # Potential logging and LSL here
                     logger.info("LEFT pressed")
                     handle_reaction("LEFT", ctx, smgr)
+                    return True
 
 
 def on_key_release_handler(
@@ -326,6 +327,7 @@ def on_key_release_handler(
                     # if this happens reset the timer --> so stop the transition
                     smgr.down_pressed = False
                     pyglet.clock.unschedule(smgr.next_state)
+                    return True
 
         # only react to left right if the stimulus is presented
         case "stimulus":
@@ -342,6 +344,7 @@ def on_key_release_handler(
                         ctx.lift_off_mrk,
                         lsl_marker="reaction onset by down key lift off",
                     )
+                    return True
 
 
 def handle_reaction(key: str, ctx: StroopContext, smgr: StroopTaskStateManager):
