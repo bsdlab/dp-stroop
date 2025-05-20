@@ -13,6 +13,7 @@ import yaml
 from fire import Fire
 
 from stroop_task.context import load_context
+from stroop_task.custom_eventloop import MyEventLoop
 from stroop_task.task_manager import (
     StroopClassicTaskStateManager,
     StroopTaskStateManager,
@@ -82,8 +83,9 @@ def run_paradigm(
         lambda dt: smgr.start_block(), 0.5
     )  # start after 0.5 sec
 
+    evloop = MyEventLoop(window=ctx.window)
     try:
-        pyglet.app.run(interval=0.008)
+        evloop.run()
     finally:
         ctx.close_context()
 
@@ -241,5 +243,5 @@ def run_block_subprocess(**kwargs):
 
 
 if __name__ == "__main__":
-    logger.pop()  # popping off the UJsonLogger from dareplane_utils
+    logger.handlers.pop()  # popping off the UJsonLogger from dareplane_utils
     Fire(run_paradigm_cli)
