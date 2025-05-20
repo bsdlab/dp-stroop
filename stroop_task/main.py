@@ -241,5 +241,5 @@ def run_block_subprocess(**kwargs):
 
 
 if __name__ == "__main__":
-    logger.pop()  # popping off the UJsonLogger from dareplane_utils
+    logger.handlers.pop()  # popping off the UJsonLogger from dareplane_utils
     Fire(run_paradigm_cli)
