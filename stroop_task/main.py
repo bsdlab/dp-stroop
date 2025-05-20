@@ -79,13 +79,12 @@ def run_paradigm(
     ctx.init_block_stimuli(n_trials)
 
     # Start running
-    pyglet.clock.schedule_once(
-        lambda dt: smgr.start_block(), 0.5
+    smgr.evloop.add_delayed_callback_once(
+        cb=smgr.start_block, dt=0.5
     )  # start after 0.5 sec
 
-    evloop = MyEventLoop(window=ctx.window)
     try:
-        evloop.run()
+        smgr.evloop.run()
     finally:
         ctx.close_context()
 
