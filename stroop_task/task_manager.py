@@ -219,6 +219,7 @@ class StroopClassicTaskStateManager:
 
     def __init__(self, ctx: StroopContext, random_wait: bool = False):
         self.ctx = ctx  # the context under which to operate
+        self.evloop: MyEventLoop = MyEventLoop(window=ctx.window)
 
     def transition_to_table(self):
         self.ctx.marker_writer.write(
@@ -228,8 +229,8 @@ class StroopClassicTaskStateManager:
         self.ctx.current_stimuli = [self.ctx.known_stimuli["classical_batch"]]
 
         # start the timeout
-        pyglet.clock.schedule_once(
-            lambda dt: self.end_block(), delay=self.ctx.classical_timeout_s
+        self.evloop.add_delayed_callback_once(
+            cb=self.end_block, dt=self.ctx.classical_timeout_s
         )
 
     def start_block(self):
@@ -257,7 +258,7 @@ class StroopClassicTaskStateManager:
         # show a fixation for 2s so that the stop is not too abrupt
         self.ctx.current_stimuli = [self.ctx.known_stimuli["fixation"]]
 
-        pyglet.clock.schedule_once(lambda dt: self.close(), delay=2)
+        self.evloop.add_delayed_callback_once(cb=self.end_block, dt=2)
 
     def close(self):
         self.ctx.close_context()
@@ -415,8 +416,16 @@ def instruction_skip_handler_classic(
     match symbol:
         case pyglet.window.key.SPACE:
             logger.info("User finished instructions")
-            # never pop last layer
-            while len(ctx.window._event_stack) > 1:
-                ctx.window.pop_handlers()
+
+            # remove the instruction_skip_handler
+            for evh_dict in ctx.window._event_stack:
+                evh = evh_dict.get("on_key_press", None)
+
+                if evh:
+                    func_name = (
+                        evh.func.__name__ if isinstance(evh, partial) else evh.__name__
+                    )
+                    if func_name == "instruction_skip_handler_classic":
+                        ctx.window.remove_handler("on_key_press", evh)
 
             smgr.transition_to_table()

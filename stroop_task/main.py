@@ -35,6 +35,7 @@ def run_paradigm(
     write_to_serial: bool = True,  # allow overwriting this from cli for simple testing
     random_wait: bool = False,
     show_fps: bool = False,
+    run_nr: int = 1,  # used for the random seed
 ):
 
     log_cfg = yaml.safe_load(open("./configs/logging.yaml"))
@@ -76,7 +77,7 @@ def run_paradigm(
 
     # Init
     ctx.create_stimuli(random_wait=random_wait)
-    ctx.init_block_stimuli(n_trials)
+    ctx.init_block_stimuli(n_trials, seed=run_nr)
 
     # Start running
     smgr.evloop.add_delayed_callback_once(
@@ -97,6 +98,7 @@ def run_paradigm_classical(
     random_wait: bool = False,
     classical_timeout_s: Optional[float] = None,
     show_fps: bool = False,
+    run_nr: int = 1,  # used for the random seed
 ):
     """
     The arrangement and colors where drawn randomly once, but are then fixed
@@ -143,15 +145,15 @@ def run_paradigm_classical(
 
     # Init
     ctx.create_stimuli(random_wait=random_wait)
-    ctx.init_classical()
+    ctx.init_classical(seed=run_nr)
 
     # Start running
-    pyglet.clock.schedule_once(
-        lambda dt: smgr.start_block(), 0.5
+    smgr.evloop.add_delayed_callback_once(
+        cb=smgr.start_block, dt=0.5
     )  # start after 0.5 sec
 
     try:
-        pyglet.app.run(interval=0.008)
+        smgr.evloop.run()
     finally:
         ctx.close_context()
 
@@ -166,6 +168,7 @@ def run_paradigm_cli(
     classical: bool = False,
     classic_stroop_time_s: float = 45,
     show_fps: bool = False,
+    run_nr: int = 1,
 ):
     """Starting the Stroop paradigm standalone in a pyglet window
 
@@ -209,6 +212,9 @@ def run_paradigm_cli(
     show_fps: bool
         If True, the FPS will be shown on the screen.
 
+    run_nr: int (default: 1)
+        Number of the run. Used for the random seed.
+
     """
 
     if classical:
@@ -220,6 +226,7 @@ def run_paradigm_cli(
             random_wait=random_wait,
             classical_timeout_s=classic_stroop_time_s,
             show_fps=show_fps,
+            run_nr=run_nr,
         )
 
     else:
@@ -231,6 +238,7 @@ def run_paradigm_cli(
             write_to_serial=write_to_serial,
             random_wait=random_wait,
             show_fps=show_fps,
+            run_nr=run_nr,
         )
 
 

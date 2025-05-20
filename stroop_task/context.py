@@ -413,7 +413,7 @@ class StroopContext:
 
         self.known_stimuli["instruction_batch"] = instruction_batch
 
-    def init_block_stimuli(self, n_trials: int):
+    def init_block_stimuli(self, n_trials: int, seed: int = 1):
         """Initialize a block of trials by modifying a context. The stimuli will
         be accessible in ctx.block_stimuli as list of tuples
         (word, pyglet.text.Label, pyglet.shapes.Rectangle, pyglet.shapes.Rectangle, str)
@@ -450,7 +450,7 @@ class StroopContext:
         stimuli = []
         n_each = n_trials // 3
         random.seed(
-            1
+            seed
         )  # work with a fixed seed to reproduce and have same stimuli for all
         for stim_dict in [coherent_stimuli, incoherent_stimuli, neutral_stimuli]:
 
@@ -500,10 +500,14 @@ class StroopContext:
         self.block_stimuli = stimuli
 
     def create_classical_table_stimulus(
-        self, n_stimuli: int = 60, n_per_row: int = 6, perc_incongruent: float = 0.33
+        self,
+        n_stimuli: int = 60,
+        n_per_row: int = 6,
+        perc_incongruent: float = 0.33,
+        seed: int = 1,
     ):
         file = Path(
-            f"./stroop_task/assets/classical_list_nstim-{n_stimuli}_perc_incongruent-{perc_incongruent:.2f}_lang-{self.language}.json"
+            f"./stroop_task/assets/classical_list_nstim-{n_stimuli}_perc_incongruent-{perc_incongruent:.2f}_lang-{self.language}_seed-{seed}.json"
         )
 
         coherent_stimuli = self.known_stimuli["coherent"]
@@ -515,7 +519,7 @@ class StroopContext:
             stimuli = json.load(open(file, "r"))["sequence"]
         else:
             logger.debug(f"Creating classical stimuli file at: {file} - random.seed(3)")
-            random.seed(3)
+            random.seed(seed)
 
             # fix seed to keep creation stable
             n_incoherent = int(n_stimuli * perc_incongruent)
@@ -652,8 +656,8 @@ class StroopContext:
             labels  # also store the label list so that it does not get deleted
         )
 
-    def init_classical(self):
-        self.create_classical_table_stimulus()
+    def init_classical(self, seed: int = 1):
+        self.create_classical_table_stimulus(seed=seed)
 
         # also create a classical instuction
         self.add_instruction_screen_batch_classical()
