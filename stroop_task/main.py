@@ -83,7 +83,7 @@ def run_paradigm(
     )  # start after 0.5 sec
 
     try:
-        pyglet.app.run(interval=0.008)
+        pyglet.app.run()
     finally:
         ctx.close_context()
 
@@ -150,7 +150,7 @@ def run_paradigm_classical(
     )  # start after 0.5 sec
 
     try:
-        pyglet.app.run(interval=0.008)
+        pyglet.app.run()
     finally:
         ctx.close_context()
 
@@ -241,5 +241,5 @@ def run_block_subprocess(**kwargs):
 
 
 if __name__ == "__main__":
-    logger.pop()  # popping off the UJsonLogger from dareplane_utils
+    logger.handlers.pop()  # popping off the UJsonLogger from dareplane_utils
     Fire(run_paradigm_cli)
