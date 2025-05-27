@@ -157,3 +157,6 @@ analysis/
 logs/
 reference/
 objects.json
+
+/.quarto/
+_site/

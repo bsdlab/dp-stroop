@@ -14,6 +14,85 @@ from stroop_task.utils.marker import MarkerWriter, get_marker_writer
 
 @dataclass
 class StroopContext:
+    """
+    A class to represent the context for the Stroop task.
+
+    Attributes
+    ----------
+    language : str
+        The language setting for the Stroop task.
+    word_color_dict : dict
+        A dictionary mapping words to their corresponding colors. See configs/<language>.yaml.
+    msgs : dict
+        A dictionary containing messages for the Stroop task. See configs/<language>.yaml.
+    startblock_mrk : int
+        Marker for the start of a block. See configs/task.yaml.
+    endblock_mrk : int
+        Marker for the end of a block. See configs/task.yaml.
+    starttrial_mrk : int
+        Marker for the start of a trial. See configs/task.yaml.
+    endtrial_mrk : int
+        Marker for the end of a trial. See configs/task.yaml.
+    congruent_mrk : int
+        Marker for congruent stimuli. See configs/task.yaml.
+    incongruent_mrk : int
+        Marker for incongruent stimuli. See configs/task.yaml.
+    lift_off_mrk : int
+        Marker for lift-off. See configs/task.yaml.
+    reaction_mrk : int
+        Marker for reaction. See configs/task.yaml.
+    timeout_mrk : int
+        Marker for timeout. See configs/task.yaml.
+    stimulus_time_s : float
+        Duration in seconds for stimulus presentation. See configs/task.yaml.
+    pre_stimulus_time_s : float
+        Duration in seconds for pre-stimulus interval. See configs/task.yaml.
+    wait_time_min_s : float
+        Minimum wait time in seconds. See configs/task.yaml.
+    wait_time_max_s : float
+        Maximum wait time in seconds. See configs/task.yaml.
+    instruction_time_s : float
+        Duration in seconds for instruction display. See configs/task.yaml.
+    results_show_time_s : float
+        Duration in seconds for results display. See configs/task.yaml.
+    arrow_down_press_to_continue_s : float
+        Duration in seconds for arrow down press to continue. See configs/task.yaml.
+    classical_timeout_s : float
+        Timeout duration in seconds for classical tasks. See configs/task.yaml.
+    focus : Literal["text", "color"]
+        Focus of the Stroop task, either "text" or "color".
+    reactions : list
+        List to track reactions.
+    block_stimuli : list
+        List of stimuli for the current block.
+    known_stimuli : dict
+        Dictionary of known stimuli.
+    current_stimulus_idx : int
+        Index of the current stimulus.
+    current_stimuli : list
+        List of current stimuli for drawing.
+    white_y_offset_px : int
+        Y-offset in pixels for white stimuli. See configs/gui.
+    font_size : int
+        Font size for stimuli. See configs/gui.
+    instruction_font_size : int
+        Font size for instructions. See configs/gui.
+    fullscreen : bool
+        Flag for fullscreen mode. See configs/gui.
+    screen_width : int
+        Width of the screen. See configs/gui.
+    screen_height : int
+        Height of the screen. See configs/gui.
+    tic : float
+        Time keeping variable.
+    tic_down : float
+        Time keeping variable for countdown.
+    marker_writer : MarkerWriter
+        Marker writer for the Stroop task.
+    has_window_attached : bool
+        Flag indicating if a window is attached.
+    """
+
     # language specific
     language: str
     word_color_dict: dict = field(default_factory=dict)
@@ -70,7 +149,7 @@ class StroopContext:
         self.has_window_attached = True
 
     def create_stimuli(self, random_wait: bool = False):
-        """Create stimuli for the stroop task using WORD_COLOR_PAIRS"""
+        """Create stimuli for the stroop task using WORD_COLOR_PAIRS from self.word_color_dict"""
 
         stimuli = {
             "fixation": pyglet.text.Label(
@@ -82,19 +161,6 @@ class StroopContext:
                 anchor_x="center",
                 anchor_y="center",
             ),
-            # "instructions": pyglet.text.Label(
-            #     # text="Please perform the stroop task `<` for incongruent, `>` for"
-            #     # " congruent",
-            #     text=self.msgs["instruction"],
-            #     color=(255, 255, 255, 255),
-            #     font_size=self.font_size,
-            #     x=self.window.width // 2,
-            #     y=self.window.height // 2,
-            #     anchor_x="center",
-            #     anchor_y="center",
-            #     width=self.window.width * 0.8,
-            #     multiline=True,
-            # ),
             "coherent": {
                 cw: pyglet.text.Label(
                     text=cw,
@@ -425,9 +491,6 @@ class StroopContext:
         n_trials : int
             number of trials per block
 
-        ctx: StroopContext
-            the context to add to
-
         """
         # Using the full setup from here
         # https://www.sciencedirect.com/science/article/pii/S1053811900906657?via%3Dihub
@@ -502,6 +565,31 @@ class StroopContext:
     def create_classical_table_stimulus(
         self, n_stimuli: int = 60, n_per_row: int = 6, perc_incongruent: float = 0.33
     ):
+        """
+        Create a classical table stimulus for the Stroop task.
+
+        This method generates a table of stimuli for the Stroop task, where each stimulus
+        is either congruent or incongruent based on the specified percentage. The stimuli
+        are arranged in rows and columns, and the table is stored in the `known_stimuli`
+        dictionary under the key "classical_batch". The labels for each stimulus are also
+        stored under the key "classical_labels".
+
+        The generated table is saved as a CSV file in the `stroop_task/assets` directory
+        to cache the layout. This will speed up the loading.
+
+        Parameters
+        ----------
+        n_stimuli : int, optional
+            The total number of stimuli to generate. Default is 60.
+        n_per_row : int, optional
+            The number of stimuli per row in the table. Default is 6.
+        perc_incongruent : float, optional
+            The percentage of incongruent stimuli in the table. Default is 0.33.
+
+        Returns
+        -------
+        None
+        """
         file = Path(
             f"./stroop_task/assets/classical_list_nstim-{n_stimuli}_perc_incongruent-{perc_incongruent:.2f}_lang-{self.language}.json"
         )
@@ -665,6 +753,25 @@ class StroopContext:
 
 
 def load_context(language: str = "english", **kwargs) -> StroopContext:
+    """
+    Load the context for the Stroop task.
+
+    This function loads the configuration settings for the Stroop task from YAML files,
+    merges them with any additional keyword arguments provided, and returns a
+    StroopContext object initialized with these settings.
+
+    Parameters
+    ----------
+    language : str, optional
+        The language setting for the Stroop task. Default is "english".
+    **kwargs
+        Additional keyword arguments to override the default settings.
+
+    Returns
+    -------
+    StroopContext
+        An instance of StroopContext initialized with the loaded settings.
+    """
     task_cfg = yaml.safe_load(open("./configs/task.yaml"))
     language_cfg = yaml.safe_load(open(f"./configs/{language}.yaml"))
     gui_cfg = yaml.safe_load(open("./configs/gui.yaml"))

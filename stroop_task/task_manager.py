@@ -10,14 +10,55 @@ from stroop_task.utils.logging import add_file_handler, logger
 
 class StroopTaskStateManager:
     """
-    A state manager for the stroop task providing callbacks for state
-    transitions from:
+    A state manager for the Stroop task providing callbacks for state transitions from:
     fixation -> stimulus -> random.wait -> fixation ...
 
-    Additionally there is an instructions and end state.
+    Additionally, there is an instructions and end state.
+
+    Attributes
+    ----------
+    ctx : StroopContext
+        The context under which to operate.
+    transition_map : dict
+        A dictionary mapping state names to their corresponding callback methods.
+    next_state_transition : None
+        Placeholder for the next state transition.
+    states : list
+        A list of states in the order they will appear.
+    current_state : str
+        The current state of the task.
+    down_pressed : bool
+        A flag indicating whether the down arrow key is pressed.
+
     """
 
     def __init__(self, ctx: StroopContext, random_wait: bool = False):
+        """
+        Initializes the StroopTaskStateManager with the given context and random wait setting.
+
+        Parameters
+        ----------
+        ctx : StroopContext
+            The context under which to operate.
+        random_wait : bool, optional
+            Flag to indicate whether to use random wait between trials. Default is False.
+
+        Attributes
+        ----------
+        ctx : StroopContext
+            The context under which to operate.
+        transition_map : dict
+            A dictionary mapping state names to their corresponding callback methods.
+        next_state_transition : None
+            Placeholder for the next state transition.
+        states : list
+            A list of states in the order they will appear.
+        current_state : str
+            The current state of the task.
+        down_pressed : bool
+            A flag indicating whether the down arrow key is pressed.
+        """
+
         self.ctx = ctx  # the context under which to operate
 
         # This list of states also orders how stimuli will appear

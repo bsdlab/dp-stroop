@@ -35,6 +35,38 @@ def run_paradigm(
     random_wait: bool = False,
     show_fps: bool = False,
 ):
+    """
+    Run the two-word Stroop task paradigm.
+
+    This function sets up and runs the two-word Stroop task paradigm using the Pyglet library.
+    It initializes the logging configuration, creates the context for the Stroop task,
+    sets up the window, and manages the task state. The function also adds the
+    drawing callbacks and starts the task after a short delay.
+
+    Parameters
+    ----------
+    n_trials : int, optional
+        The number of trials to run in a block - needs to be an integer divisible by 6 for balancing. Default is 60.
+    language : str, optional
+        The language setting for the Stroop task. Default is "english".
+    logger_level : str | None, optional
+        The logging level to set for the logger. If None, the level from the
+        configuration file is used. Default is None.
+    focus : str, optional
+        The focus of the task, either "text" or "color". Default is "color".
+    write_to_serial : bool, optional
+        Whether to write markers to a serial port. Default is True.
+    random_wait : bool, optional
+        Whether to use a random wait between trials. Default is False. If false, the user is required
+        to push the arrow-down button for at least 500ms to start the next trial. If true, a random
+        inter-trial-interval will be used. See `configs/task.yaml` and the `wait_time_min_s` and `wait_time_max_s` values therein.
+    show_fps : bool, optional
+        Whether to show the frames per second (FPS) on the screen. Default is False.
+
+    Returns
+    -------
+    None
+    """
 
     log_cfg = yaml.safe_load(open("./configs/logging.yaml"))
     log_path = Path(log_cfg["log_file"])

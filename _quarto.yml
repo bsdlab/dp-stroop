@@ -1,8 +1,26 @@
+project:
+  type: website
+
+website:
+  sidebar:
+    - id: "main"
+      contents:
+        - section: "Documentation"
+          contents:
+            - reference/index.qmd
+
 quartodoc:
   package: "dp-stroop" # name of the package
   source_dir: "stroop_task" # as the source code is within this folder
 
   title: "Documentation for the Stroop task"
+
+  options:
+    signature_name: full
+
+  # write sidebar where quartodoc writes its content without impacting quarto
+  sidebar:
+    file: "reference/_stroop_sidebar.yml"
 
   sections:
     - title: "The Stroop task"
@@ -17,3 +35,10 @@ quartodoc:
       desc: The main script to start the Stroop task from command line.
       contents:
         - main.run_paradigm_cli
+        - main.run_paradigm
+        - main.run_paradigm_classical
+        - context.StroopContext
+        - task_manager.StroopTaskStateManager
+        - utils.marker.utf8_write
+        - utils.marker.port_writer
+        - utils.marker.MarkerWriter
