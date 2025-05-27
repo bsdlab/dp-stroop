@@ -1,0 +1,19 @@
+quartodoc:
+  package: "dp-stroop" # name of the package
+  source_dir: "stroop_task" # as the source code is within this folder
+
+  title: "Documentation for the Stroop task"
+
+  sections:
+    - title: "The Stroop task"
+      desc: |
+        :::{.callout-info}
+        The github repository for this module is located at:
+        [https://github.com/bsdlab/dp-stroop](https://github.com/bsdlab/dp-stroop)
+        :::
+
+    - subtitle: Modified Stroop task
+      package: stroop_task
+      desc: The main script to start the Stroop task from command line.
+      contents:
+        - main.run_paradigm_cli
