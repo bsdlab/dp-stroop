@@ -4,7 +4,7 @@ from fire import Fire
 # from stroop_task.main import run_block_subprocess
 # from stroop_task.main_psychopy import run_block_subprocess
 # from stroop_task.main_dutch_version import run_block_subprocess
-from stroop_task.main_dutch_version_squares import run_block_subprocess
+from stroop_task.main import run_block_subprocess
 from stroop_task.utils.logging import logger
 
 
