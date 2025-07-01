@@ -128,6 +128,7 @@ def run_paradigm_classical(
     random_wait: bool = False,
     classical_timeout_s: Optional[float] = None,
     show_fps: bool = False,
+    block_nr: int = 1,
 ):
     """
     The arrangement and colors where drawn randomly once, but are then fixed
@@ -144,7 +145,9 @@ def run_paradigm_classical(
         logger.setLevel(logger_level)
 
     mw = get_marker_writer(write_to_serial=write_to_serial)
-    ctx = load_context(language=language, focus=focus, marker_writer=mw)
+    ctx = load_context(
+        language=language, focus=focus, marker_writer=mw, block_nr=block_nr
+    )
 
     config = pyglet.gl.Config(double_buffer=True, depth_size=16)
     ctx.add_window(
@@ -197,6 +200,7 @@ def run_paradigm_cli(
     classical: bool = False,
     classic_stroop_time_s: float = 45,
     show_fps: bool = False,
+    block_nr: int = 1,
 ):
     """Starting the Stroop paradigm standalone in a pyglet window
 
@@ -240,6 +244,11 @@ def run_paradigm_cli(
     show_fps: bool
         If True, the FPS will be shown on the screen.
 
+    block_nr : int (default: 1)
+        The block number of the current run. This is used as a seed for the
+        classical Stroop task's random generator -> allows to generate new
+        layouts in case more than one block is used.
+
     """
 
     if classical:
@@ -251,6 +260,7 @@ def run_paradigm_cli(
             random_wait=random_wait,
             classical_timeout_s=classic_stroop_time_s,
             show_fps=show_fps,
+            block_nr=block_nr,
         )
 
     else:

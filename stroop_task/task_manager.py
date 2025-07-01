@@ -4,6 +4,7 @@ from functools import partial
 
 import pyglet
 
+from stroop_task.audio.record import SpokenStroopRecorder
 from stroop_task.context import StroopContext, load_context
 from stroop_task.utils.logging import add_file_handler, logger
 
@@ -251,8 +252,14 @@ class StroopClassicTaskStateManager:
 
     def __init__(self, ctx: StroopContext, random_wait: bool = False):
         self.ctx = ctx  # the context under which to operate
+        self.audio_recorder = SpokenStroopRecorder()
+        # if `transcribe_audio`, the audio will be transcribed using a Whisper model after the block
+        self.transcribe_audio = True
 
     def transition_to_table(self):
+        if self.transcribe_audio:
+            self.audio_recorder.record_for_s(self.ctx.classical_timeout_s * 1.05)
+
         self.ctx.marker_writer.write(
             self.ctx.startblock_mrk, lsl_marker="start_block_classic"
         )
@@ -264,8 +271,10 @@ class StroopClassicTaskStateManager:
             lambda dt: self.end_block(), delay=self.ctx.classical_timeout_s
         )
 
-    def start_block(self):
-        """Start a block of trials"""
+    def start_block(self, transcribe_audio: bool = True):
+        """
+        Start a block of trials
+        """
 
         logger.debug("Showing intructions")
         self.ctx.marker_writer.write(self.ctx.startblock_mrk, lsl_marker="start_block")
@@ -289,10 +298,22 @@ class StroopClassicTaskStateManager:
         # show a fixation for 2s so that the stop is not too abrupt
         self.ctx.current_stimuli = [self.ctx.known_stimuli["fixation"]]
 
+        if self.transcribe_audio:
+
+            # draw once as the call to persists is halting and might take a lot
+            # of time
+            self.ctx.window.clear()
+            logger.debug("cleared drawing")
+            for stim in self.ctx.current_stimuli:
+                stim.draw()
+
+            self.audio_recorder.persist_accumulated()
+
         pyglet.clock.schedule_once(lambda dt: self.close(), delay=2)
 
     def close(self):
         self.ctx.close_context()
+        del self.audio_recorder
         pass
 
 

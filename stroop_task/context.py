@@ -91,6 +91,9 @@ class StroopContext:
         Marker writer for the Stroop task.
     has_window_attached : bool
         Flag indicating if a window is attached.
+    block_nr: int (default: 1)
+        The current block number, used as seed for random generation of the
+        classical Stroop table
     """
 
     # language specific
@@ -128,6 +131,8 @@ class StroopContext:
     known_stimuli: dict = field(default_factory=dict)
     current_stimulus_idx: int = 0  # will be used to index block stimuli
     current_stimuli: list = field(default_factory=list)  # tracking stimuli for drawing
+
+    block_nr: int = 1  # seed for classical stroop task
 
     # GUI
     white_y_offset_px: int = 100
@@ -591,7 +596,7 @@ class StroopContext:
         None
         """
         file = Path(
-            f"./stroop_task/assets/classical_list_nstim-{n_stimuli}_perc_incongruent-{perc_incongruent:.2f}_lang-{self.language}.json"
+            f"./stroop_task/assets/classical_list_nstim-{n_stimuli}_perc_incongruent-{perc_incongruent:.2f}_lang-{self.language}_block-{self.block_nr}.json"
         )
 
         coherent_stimuli = self.known_stimuli["coherent"]
@@ -602,8 +607,10 @@ class StroopContext:
             logger.debug(f"Loading stimuli from {file}")
             stimuli = json.load(open(file, "r"))["sequence"]
         else:
-            logger.debug(f"Creating classical stimuli file at: {file} - random.seed(3)")
-            random.seed(3)
+            logger.debug(
+                f"Creating classical stimuli file at: {file} - random.seed({self.block_nr})"
+            )
+            random.seed(self.block_nr)
 
             # fix seed to keep creation stable
             n_incoherent = int(n_stimuli * perc_incongruent)

@@ -1,0 +1,4 @@
+device:
+  name: default
+  id: "MacBook Pro Microphone"
+  sfreq: 44100
