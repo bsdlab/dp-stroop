@@ -22,47 +22,48 @@ import numpy as np
 import pandas as pd
 import sounddevice as sd
 import yaml
-from faster_whisper import WhisperModel
+
+# from faster_whisper import WhisperModel
 from scipy import signal
 
 from stroop_task.utils.logging import logger
 
-
-def recording_to_dataframe(rec16k: np.ndarray) -> pd.DataFrame:
-    """Model was trained on 16k data -> use resampled"""
-
-    model_size = "small"
-    # model = WhisperModel(model_size, device="cpu", compute_type="int8")
-    model = WhisperModel(model_size, device="cpu", compute_type="float32")
-
-    segments, info = model.transcribe(
-        rec16k.flatten(),
-        beam_size=8,
-        word_timestamps=True,
-    )
-
-    data = []
-    for seg in segments:
-        if seg is not None:
-            for word in seg.words:
-                data.append(
-                    {
-                        "word_start": word.start,
-                        "word_end": word.end,
-                        "word": word.word,
-                        "seg_start": seg.start,
-                        "seg_end": seg.end,
-                        "seg_text": seg.text,
-                        "seg_id": seg.id,
-                        "seg_avg_logprod": seg.avg_logprob,
-                        "seg_compression_ratio": seg.compression_ratio,
-                        "seg_no_speech_prob": seg.no_speech_prob,
-                        "seg_temp": seg.temperature,
-                    }
-                )
-    df = pd.DataFrame(data)
-
-    return df
+# def recording_to_dataframe(rec16k: np.ndarray) -> pd.DataFrame:
+#     """Model was trained on 16k data -> use resampled"""
+#
+#     model_size = "small"
+#     # model = WhisperModel(model_size, device="cpu", compute_type="int8")
+#     model = WhisperModel(model_size, device="cpu", compute_type="float32")
+#
+#     segments, info = model.transcribe(
+#         rec16k.flatten(),
+#         beam_size=8,
+#         word_timestamps=True,
+#     )
+#
+#     data = []
+#     for seg in segments:
+#         if seg is not None:
+#             for word in seg.words:
+#                 data.append(
+#                     {
+#                         "word_start": word.start,
+#                         "word_end": word.end,
+#                         "word": word.word,
+#                         "seg_start": seg.start,
+#                         "seg_end": seg.end,
+#                         "seg_text": seg.text,
+#                         "seg_id": seg.id,
+#                         "seg_avg_logprod": seg.avg_logprob,
+#                         "seg_compression_ratio": seg.compression_ratio,
+#                         "seg_no_speech_prob": seg.no_speech_prob,
+#                         "seg_temp": seg.temperature,
+#                     }
+#                 )
+#     df = pd.DataFrame(data)
+#
+#     return df
+#
 
 
 def recording_to_rectified(
@@ -118,7 +119,7 @@ class SpokenStroopRecorder:
         logger.info("Transforming audio to rectified and transcription...")
         self.rectified_recording = recording_to_rectified(self.rec)
         logger.info("Transcribing sequence...")
-        self.df = recording_to_dataframe(self.rec16k)  # type: ignore
+        # self.df = recording_to_dataframe(self.rec16k)  # type: ignore
         logger.info("Done.")
         self.transformed = True
 
@@ -137,10 +138,10 @@ class SpokenStroopRecorder:
         np.save(file_raw_np, self.rec)
         logger.info(f"Persisting rectified to {file_np}")
         np.save(file_np, self.rectified_recording)
-        logger.info(f"Persisting transcription to {file_pd}")
-        self.df.to_csv(
-            file_pd, sep="\t"
-        )  # choosing tab separated as this is standard in BIDS
+        # logger.info(f"Persisting transcription to {file_pd}")
+        # self.df.to_csv(
+        #     file_pd, sep="\t"
+        # )  # choosing tab separated as this is standard in BIDS
 
 
 if __name__ == "__main__":
