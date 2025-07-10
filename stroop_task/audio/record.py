@@ -129,9 +129,12 @@ class SpokenStroopRecorder:
         logcfg = yaml.safe_load(open("./configs/logging.yaml", "r"))
         pfx = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
+        file_raw_np = Path(logcfg["log_file"]).parent.joinpath(f"{pfx}_raw_audio.npy")
         file_np = Path(logcfg["log_file"]).parent.joinpath(f"{pfx}_audio.npy")
         file_pd = Path(logcfg["log_file"]).parent.joinpath(f"{pfx}_audio.tsv")
 
+        logger.info(f"Persisting raw recording to {file_raw_np}")
+        np.save(file_raw_np, self.rec)
         logger.info(f"Persisting rectified to {file_np}")
         np.save(file_np, self.rectified_recording)
         logger.info(f"Persisting transcription to {file_pd}")
