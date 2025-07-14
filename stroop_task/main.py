@@ -129,6 +129,7 @@ def run_paradigm_classical(
     classical_timeout_s: Optional[float] = None,
     show_fps: bool = False,
     block_nr: int = 1,
+    no_audio: bool = False,
 ):
     """
     The arrangement and colors where drawn randomly once, but are then fixed
@@ -146,7 +147,11 @@ def run_paradigm_classical(
 
     mw = get_marker_writer(write_to_serial=write_to_serial)
     ctx = load_context(
-        language=language, focus=focus, marker_writer=mw, block_nr=block_nr
+        language=language,
+        focus=focus,
+        marker_writer=mw,
+        block_nr=block_nr,
+        no_audio=no_audio,
     )
 
     config = pyglet.gl.Config(double_buffer=True, depth_size=16)
@@ -161,7 +166,9 @@ def run_paradigm_classical(
     )
     if classical_timeout_s:
         ctx.classical_timeout_s = classical_timeout_s
-    smgr = StroopClassicTaskStateManager(ctx=ctx, random_wait=random_wait)
+    smgr = StroopClassicTaskStateManager(
+        ctx=ctx, random_wait=random_wait, no_audio=no_audio
+    )
 
     fps_display = (
         pyglet.window.FPSDisplay(window=ctx.window, color=(255, 255, 255, 255))
@@ -201,6 +208,7 @@ def run_paradigm_cli(
     classic_stroop_time_s: float = 45,
     show_fps: bool = False,
     block_nr: int = 1,
+    no_audio: bool = False,
 ):
     """Starting the Stroop paradigm standalone in a pyglet window
 
@@ -249,6 +257,9 @@ def run_paradigm_cli(
         classical Stroop task's random generator -> allows to generate new
         layouts in case more than one block is used.
 
+    no_audio : bool (default: False)
+        If True, no audio will be recorded.
+
     """
 
     if classical:
@@ -261,6 +272,7 @@ def run_paradigm_cli(
             classical_timeout_s=classic_stroop_time_s,
             show_fps=show_fps,
             block_nr=block_nr,
+            no_audio=no_audio,
         )
 
     else:

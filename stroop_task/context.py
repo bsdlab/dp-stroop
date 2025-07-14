@@ -94,6 +94,8 @@ class StroopContext:
     block_nr: int (default: 1)
         The current block number, used as seed for random generation of the
         classical Stroop table
+    no_audio: bool (default: False)
+        if True, no audio is recorded
     """
 
     # language specific
@@ -131,8 +133,8 @@ class StroopContext:
     known_stimuli: dict = field(default_factory=dict)
     current_stimulus_idx: int = 0  # will be used to index block stimuli
     current_stimuli: list = field(default_factory=list)  # tracking stimuli for drawing
-
     block_nr: int = 1  # seed for classical stroop task
+    no_audio: bool = False
 
     # GUI
     white_y_offset_px: int = 100
@@ -813,5 +815,4 @@ if __name__ == "__main__":
     ctx.create_stimuli()
 
     ctx.init_classical()
-
     self = ctx
