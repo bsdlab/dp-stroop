@@ -570,7 +570,7 @@ class StroopContext:
         self.block_stimuli = stimuli
 
     def create_classical_table_stimulus(
-        self, n_stimuli: int = 60, n_per_row: int = 6, perc_incongruent: float = 0.33
+        self, n_stimuli: int = 60, n_per_row: int = 6, perc_incongruent: float = 0.5
     ):
         """
         Create a classical table stimulus for the Stroop task.
@@ -591,7 +591,7 @@ class StroopContext:
         n_per_row : int, optional
             The number of stimuli per row in the table. Default is 6.
         perc_incongruent : float, optional
-            The percentage of incongruent stimuli in the table. Default is 0.33.
+            The percentage of incongruent stimuli in the table. Default is 0.5.
 
         Returns
         -------
@@ -625,6 +625,8 @@ class StroopContext:
             random.shuffle(stimuli)
 
             json.dump({"sequence": stimuli}, open(file, "w"))
+
+        logger.info(f"Using following stimuli for the classical task: {stimuli}")
 
         # sort into rows
         stimuli_arranged = [
