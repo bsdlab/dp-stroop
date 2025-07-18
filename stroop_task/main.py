@@ -34,6 +34,7 @@ def run_paradigm(
     write_to_serial: bool = True,  # allow overwriting this from cli for simple testing
     random_wait: bool = False,
     show_fps: bool = False,
+    tutorial_mode: bool = False,
 ):
     """
     Run the two-word Stroop task paradigm.
@@ -62,6 +63,9 @@ def run_paradigm(
         inter-trial-interval will be used. See `configs/task.yaml` and the `wait_time_min_s` and `wait_time_max_s` values therein.
     show_fps : bool, optional
         Whether to show the frames per second (FPS) on the screen. Default is False.
+    tutorial_mode: bool, optional
+        Whether to run the task in tutorial mode. Default is False. If true, the timeout for
+        reaction is increased to 60s
 
     Returns
     -------
@@ -79,6 +83,9 @@ def run_paradigm(
 
     mw = get_marker_writer(write_to_serial=write_to_serial)
     ctx = load_context(language=language, focus=focus, marker_writer=mw)
+
+    if tutorial_mode:
+        ctx.stimulus_time_s = 60
 
     config = pyglet.gl.Config(double_buffer=True, depth_size=16)
     ctx.add_window(
@@ -209,6 +216,7 @@ def run_paradigm_cli(
     show_fps: bool = False,
     block_nr: int = 1,
     no_audio: bool = False,
+    tutorial_mode: bool = False,
 ):
     """Starting the Stroop paradigm standalone in a pyglet window
 
@@ -260,6 +268,10 @@ def run_paradigm_cli(
     no_audio : bool (default: False)
         If True, no audio will be recorded.
 
+    tutorial_mode : bool (default: False)
+        If True, the tutorial mode will be used for the modified Stroop task
+        increasing the timeout to 60s.
+
     """
 
     if classical:
@@ -284,6 +296,7 @@ def run_paradigm_cli(
             write_to_serial=write_to_serial,
             random_wait=random_wait,
             show_fps=show_fps,
+            tutorial_mode=tutorial_mode,
         )
 
 
