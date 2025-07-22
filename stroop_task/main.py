@@ -1,8 +1,5 @@
 # A pyglet implementation of the stroop task
 
-import random
-import time
-from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 from subprocess import Popen
@@ -21,9 +18,6 @@ from stroop_task.task_manager import (
 )
 from stroop_task.utils.logging import add_file_handler, logger
 from stroop_task.utils.marker import get_marker_writer
-
-# Test this option
-# pyglet.options["win32_gdi_font"] = True   # not working on some windows versions
 
 
 def run_paradigm(
@@ -298,13 +292,6 @@ def run_paradigm_cli(
             show_fps=show_fps,
             tutorial_mode=tutorial_mode,
         )
-
-
-def run_block_subprocess(**kwargs):
-    kwargs_str = " ".join([f"--{k} {v}" for k, v in kwargs.items()])
-    cmd = "python -m stroop_task.main " + kwargs_str
-    pid = Popen(cmd, shell=True)
-    return pid
 
 
 if __name__ == "__main__":
