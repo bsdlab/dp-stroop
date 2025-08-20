@@ -5,8 +5,8 @@ from functools import partial
 import pyglet
 
 from stroop_task.audio.record import SpokenStroopRecorder
-from stroop_task.context import StroopContext, load_context
-from stroop_task.utils.logging import add_file_handler, logger
+from stroop_task.context import StroopContext
+from stroop_task.utils.logging import logger
 
 
 class StroopTaskStateManager:
@@ -106,7 +106,7 @@ class StroopTaskStateManager:
         curr_i = self.states.index(self.current_state)
         next_i = (curr_i + 1) % len(self.states)
         next_state = self.states[next_i]
-        logger.debug(f"Transitioning from `{self.current_state}` to " f"`{next_state}`")
+        logger.debug(f"Transitioning from `{self.current_state}` to `{next_state}`")
         self.current_state = next_state
 
         if next_state.startswith("fixation"):
@@ -296,13 +296,11 @@ class StroopClassicTaskStateManager:
         ]
 
     def end_block(self):
-
         self.ctx.marker_writer.write(self.ctx.endblock_mrk, lsl_marker="end_block")
         # show a fixation for 2s so that the stop is not too abrupt
         self.ctx.current_stimuli = [self.ctx.known_stimuli["fixation"]]
 
         if not self.no_audio:
-
             # draw once as the call to persists is halting and might take a lot
             # of time
             self.ctx.window.clear()
@@ -350,7 +348,6 @@ def on_key_press_handler(
 
     match smgr.current_state:
         case "fixation_until_arrow_down":
-
             if symbol == pyglet.window.key.DOWN and not smgr.down_pressed:
                 # start tracking
                 smgr.down_pressed = True

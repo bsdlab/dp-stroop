@@ -17,7 +17,6 @@
 import datetime
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import sounddevice as sd
@@ -69,7 +68,6 @@ from stroop_task.utils.logging import logger
 def recording_to_rectified(
     recording: np.ndarray, n_levels: int = 20, fs: int = 16_000, dt_mean_s: float = 0.02
 ) -> np.ndarray:
-
     n_mean = int(dt_mean_s * fs)
 
     rec_abs_max = np.hstack(
@@ -101,7 +99,6 @@ def recording_to_rectified(
 
 
 class SpokenStroopRecorder:
-
     def __init__(self):
         self.cfg = yaml.safe_load(open("./configs/audio.yaml", "r"))
         self.fs = self.cfg["device"]["sfreq"]
@@ -132,7 +129,7 @@ class SpokenStroopRecorder:
 
         file_raw_np = Path(logcfg["log_file"]).parent.joinpath(f"{pfx}_raw_audio.npy")
         file_np = Path(logcfg["log_file"]).parent.joinpath(f"{pfx}_audio.npy")
-        file_pd = Path(logcfg["log_file"]).parent.joinpath(f"{pfx}_audio.tsv")
+        # file_pd = Path(logcfg["log_file"]).parent.joinpath(f"{pfx}_audio.tsv")
 
         logger.info(f"Persisting raw recording to {file_raw_np}")
         np.save(file_raw_np, self.rec)
