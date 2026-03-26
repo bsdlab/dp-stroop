@@ -106,7 +106,7 @@ class StroopTaskStateManager:
         curr_i = self.states.index(self.current_state)
         next_i = (curr_i + 1) % len(self.states)
         next_state = self.states[next_i]
-        logger.debug(f"Transitioning from `{self.current_state}` to " f"`{next_state}`")
+        logger.debug(f"Transitioning from `{self.current_state}` to `{next_state}`")
         self.current_state = next_state
 
         if next_state.startswith("fixation"):
@@ -261,6 +261,7 @@ class StroopClassicTaskStateManager:
 
     def transition_to_table(self):
         if not self.no_audio:
+            logger.info("Starting audio recording")
             self.audio_recorder.record_for_s(self.ctx.classical_timeout_s * 1.05)
 
         self.ctx.marker_writer.write(
@@ -302,7 +303,6 @@ class StroopClassicTaskStateManager:
         self.ctx.current_stimuli = [self.ctx.known_stimuli["fixation"]]
 
         if not self.no_audio:
-
             # draw once as the call to persists is halting and might take a lot
             # of time
             self.ctx.window.clear()
@@ -350,7 +350,6 @@ def on_key_press_handler(
 
     match smgr.current_state:
         case "fixation_until_arrow_down":
-
             if symbol == pyglet.window.key.DOWN and not smgr.down_pressed:
                 # start tracking
                 smgr.down_pressed = True

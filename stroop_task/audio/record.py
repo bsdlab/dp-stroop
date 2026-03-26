@@ -23,6 +23,7 @@ import pandas as pd
 import sounddevice as sd
 import yaml
 
+
 # from faster_whisper import WhisperModel
 from scipy import signal
 
@@ -101,7 +102,6 @@ def recording_to_rectified(
 
 
 class SpokenStroopRecorder:
-
     def __init__(self):
         self.cfg = yaml.safe_load(open("./configs/audio.yaml", "r"))
         self.fs = self.cfg["device"]["sfreq"]
