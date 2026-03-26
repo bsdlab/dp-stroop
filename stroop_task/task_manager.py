@@ -310,6 +310,7 @@ class StroopClassicTaskStateManager:
             for stim in self.ctx.current_stimuli:
                 stim.draw()
 
+            logger.info("persisting audio")
             self.audio_recorder.persist_accumulated()
 
         pyglet.clock.schedule_once(lambda dt: self.close(), delay=2)
