@@ -1,3 +1,4 @@
+import sys
 from subprocess import Popen
 
 from fire import Fire
@@ -71,8 +72,8 @@ def run_paradigm(**kwargs):
 
 
 def run_block_subprocess(**kwargs):
-    kwargs_str = " ".join([f"--{k} {v}" for k, v in kwargs.items()])
-    cmd = "python -m stroop_task.run_subprocess " + kwargs_str
+    cmd = [sys.executable, "-m", "stroop_task.run_subprocess"]
+    cmd += [x for k, v in kwargs.items() for x in (f"--{k}", str(v))]
     logger.info(f"Starting subprocess with command: {cmd}")
     pid = Popen(cmd.split())
 
