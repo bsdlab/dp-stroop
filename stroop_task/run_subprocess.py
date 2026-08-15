@@ -75,7 +75,7 @@ def run_block_subprocess(**kwargs):
     cmd = [sys.executable, "-m", "stroop_task.run_subprocess"]
     cmd += [x for k, v in kwargs.items() for x in (f"--{k}", str(v))]
     logger.info(f"Starting subprocess with command: {cmd}")
-    pid = Popen(cmd.split())
+    pid = Popen(cmd)
 
     return pid
 
