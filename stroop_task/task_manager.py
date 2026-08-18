@@ -5,8 +5,8 @@ from functools import partial
 import pyglet
 
 from stroop_task.audio.record import SpokenStroopRecorder
-from stroop_task.context import StroopContext, load_context
-from stroop_task.utils.logging import add_file_handler, logger
+from stroop_task.context import StroopContext
+from stroop_task.utils.logging import logger
 
 
 class StroopTaskStateManager:
@@ -297,7 +297,6 @@ class StroopClassicTaskStateManager:
         ]
 
     def end_block(self):
-
         self.ctx.marker_writer.write(self.ctx.endblock_mrk, lsl_marker="end_block")
         # show a fixation for 2s so that the stop is not too abrupt
         self.ctx.current_stimuli = [self.ctx.known_stimuli["fixation"]]

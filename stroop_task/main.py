@@ -2,7 +2,6 @@
 
 from functools import partial
 from pathlib import Path
-from subprocess import Popen
 from typing import Optional
 
 import pyglet

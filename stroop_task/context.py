@@ -2,7 +2,6 @@ import json
 import random
 from dataclasses import dataclass, field
 from pathlib import Path
-from re import split
 from typing import Literal
 
 import pyglet
@@ -523,7 +522,6 @@ class StroopContext:
             1
         )  # work with a fixed seed to reproduce and have same stimuli for all
         for stim_dict in [coherent_stimuli, incoherent_stimuli, neutral_stimuli]:
-
             if stim_dict == coherent_stimuli:
                 stim_aux = [
                     (cw + "_" + cw, stim_dict[cw])
@@ -550,7 +548,7 @@ class StroopContext:
             match_vect = [0, 1] * (n_each // 2)
             random.shuffle(match_vect)
 
-            tstim = []
+            # tstim = []
             for (cw_top, stim_top), match in zip(top_stims, match_vect):
                 cwt = cw_top.split("_")[1]
 
@@ -664,7 +662,6 @@ class StroopContext:
         )
 
     def add_instruction_screen_batch_classical(self):
-
         instruction_batch_classical = pyglet.graphics.Batch()
         self.known_stimuli["instruction_header_classical"] = pyglet.text.Label(
             text=self.msgs["instruction_headline_classical"],
